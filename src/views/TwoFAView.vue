@@ -57,7 +57,6 @@ import axios from 'axios'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/composables/useAuth'
-// ✅ IMPORTACIÓN CORRECTA DE PIN INPUTS
 import {
   PinInput,
   PinInputGroup,
@@ -71,17 +70,21 @@ const error = ref('')
 const mensaje = ref('')
 const email = localStorage.getItem('email2FA')
 const code = ref('')
-const inputs = ref(Array(8).fill(''))
 
 onMounted(() => {
   mensaje.value = `Se ha enviado un código de verificación a ${email || 'tu correo'}.`
 })
+
 const handleComplete = async (value) => {
   code.value = value
   await verificar()
 }
+
 const verificar = async () => {
-  if (code.value.length !== 8) {
+  const { setToken, setUser } = useAuth()
+  const finalCode = Array.isArray(code.value) ? code.value.join('') : code.value
+
+  if (finalCode.length !== 8) {
     error.value = 'Por favor, ingresa el código completo.'
     return
   }
@@ -89,7 +92,7 @@ const verificar = async () => {
   try {
     const response = await axios.post('https://interappapi-epdqhjbmepckfgda.canadacentral-01.azurewebsites.net/api/auth/verificar-codigo', {
       email,
-      code: code
+      code: finalCode
     })
 
     const { token, nombre, dpi, email: correo, refreshToken } = response.data
@@ -101,10 +104,10 @@ const verificar = async () => {
 
     router.push('/dashboard')
   } catch (err) {
+    console.error('Error al verificar código:', err)
     error.value = 'Código inválido o expirado.'
   }
 }
-
 
 const reenviarCodigo = async () => {
   if (reenviando.value) return

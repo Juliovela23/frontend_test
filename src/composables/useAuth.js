@@ -1,6 +1,6 @@
 // src/composables/useAuth.js
 import axios from 'axios'
-import { token, isAuthenticated } from './authStore'
+import { token, isAuthenticated, user } from './authStore'
 
 export function useAuth() {
   const setToken = (newToken) => {
@@ -8,22 +8,23 @@ export function useAuth() {
     localStorage.setItem('token', newToken)
     isAuthenticated.value = true
   }
-  const getUser = () => user.value
-
-  const clearToken = () => {
-    token.value = null
-    localStorage.removeItem('token')
-    isAuthenticated.value = false
-    user.value = null
-    localStorage.removeItem('user')
-  }
-
-  const getToken = () => token.value
 
   const setUser = (userData) => {
     user.value = userData
     localStorage.setItem('user', JSON.stringify(userData))
   }
+
+  const getUser = () => user.value
+
+  const clearToken = () => {
+    token.value = null
+    isAuthenticated.value = false
+    user.value = null
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+  }
+
+  const getToken = () => token.value
 
   const logout = async () => {
     try {

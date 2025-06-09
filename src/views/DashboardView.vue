@@ -1,4 +1,5 @@
 <template>
+  
   <div class="min-h-screen bg-[#002C5F] flex items-center justify-center px-4">
     <Transition
       enter-active-class="transition duration-700 ease-out"
@@ -11,8 +12,8 @@
       >
         <!-- Título -->
         <h1 class="text-2xl font-bold text-blue-800">¡Bienvenido, {{ user?.nombre || 'Usuario' }}! 👋</h1>
-        <p class="text-gray-600">Correo: </p>
-        <p class="text-gray-500 text-sm">DPI: </p>
+        <p class="text-gray-600">Correo: {{ user?.email }} </p>
+        <p class="text-gray-500 text-sm">DPI: {{ user.dpi }}</p>
 
         <!-- Acciones -->
         <div class="pt-4">
@@ -35,7 +36,7 @@ import { useAuth } from '@/composables/useAuth.js'
 const { getUser, logout } = useAuth()
 const user = ref(getUser())  // <- esto carga los datos
 const show = ref(false)
-console.log('Usuario:', user) 
+//console.log('Usuario:', user) 
 
 onMounted(() => {
   show.value = true
