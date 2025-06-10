@@ -7,12 +7,25 @@ export default {
   ],
   theme: {
   	extend: {
+		animation: {
+        'pulse-bg': 'pulseBG 6s ease-in-out infinite',
+      },
+      keyframes: {
+        pulseBG: {
+          '0%, 100%': { backgroundColor: '#f3f4f6' }, // gray-100
+          '50%': { backgroundColor: '#00AEEF' }, // celeste
+        },
+      },
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+			  	primary: '#001D3D',     // Azul oscuro
+				accent: '#00AEEF',      // Celeste brillante
+				sidebarBg: '#001D3D',   // Fondo sidebar
+				cardBg: '#ffffff',      // Fondo para tarjetas/contenido
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

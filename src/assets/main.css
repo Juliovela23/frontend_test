@@ -105,3 +105,21 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
+
+@keyframes gradientBackground {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-gradient-animated {
+  background: linear-gradient(-45deg, #f3f4f6, #d0eaff, #00aeef, #f3f4f6);
+  background-size: 300% 300%;
+  animation: gradientBackground 10s ease infinite;
+}

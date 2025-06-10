@@ -1,45 +1,66 @@
-<template>
-  
-  <div class="min-h-screen bg-[#002C5F] flex items-center justify-center px-4">
-    <Transition
-      enter-active-class="transition duration-700 ease-out"
-      enter-from-class="opacity-0 translate-y-5"
-      enter-to-class="opacity-100 translate-y-0"
-    >
-      <div
-        v-if="show"
-        class="bg-white w-full max-w-xl rounded-xl shadow-2xl p-8 text-center space-y-4"
-      >
-        <!-- Título -->
-        <h1 class="text-2xl font-bold text-blue-800">¡Bienvenido, {{ user?.nombre || 'Usuario' }}! 👋</h1>
-        <p class="text-gray-600">Correo: {{ user?.email }} </p>
-        <p class="text-gray-500 text-sm">DPI: {{ user.dpi }}</p>
-
-        <!-- Acciones -->
-        <div class="pt-4">
-          <button
-            @click="logout"
-            class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-md text-sm transition"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-      </div>
-    </Transition>
-  </div>
-</template>
-
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuth } from '@/composables/useAuth.js'
 
+import AppSidebar from '../components/AppSidebar.vue'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import { Separator } from '@/components/ui/separator'
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar'
+
+// Puedes conservar estos si son necesarios para documentación
+// export const description = 'A sidebar that collapses to icons.'
+// export const iframeHeight = '800px'
+// export const containerClass = 'w-full h-full'
+
 const { getUser, logout } = useAuth()
-const user = ref(getUser())  // <- esto carga los datos
+const user = ref(getUser())
 const show = ref(false)
-//console.log('Usuario:', user) 
 
 onMounted(() => {
   show.value = true
 })
 </script>
+
+
+<template>
+  <SidebarProvider>
+    <AppSidebar />
+    <SidebarInset>
+      <header class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <div class="flex items-center gap-2 px-4">
+          <SidebarTrigger class="-ml-1" />
+          <Separator orientation="vertical" class="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem class="hidden md:block">
+                <BreadcrumbLink href="#">
+                  Building Your Application
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator class="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
+      <div class="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <!-- Aquí puedes agregar el contenido principal de tu vista de Dashboard -->
+         
+      </div>
+    </SidebarInset>
+  </SidebarProvider>
+</template>
 
