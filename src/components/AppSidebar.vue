@@ -11,6 +11,7 @@ import {
   Settings2,
   SquareTerminal,
   Banknote,
+  Landmark
 } from "lucide-vue-next";
 import NavMain from '@/components/NavMain.vue';
 import NavProjects from '@/components/NavProjects.vue';
@@ -37,13 +38,13 @@ const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    avatar: "",
   },
   teams: [
     {
       name: "InterApp",
       logo: GalleryVerticalEnd,
-      plan: "Enterprise",
+      plan: "Web oficial",
     },
     {
       name: "Acme Corp.",
@@ -61,87 +62,42 @@ const data = {
       title: "Transferencias",
       url: "#",
       icon: Banknote,
-      isActive: true,
       items: [
         {
           title: "Cuentas",
-          url: "#",
+          url: "/dashboard/cuentas",
         },
         {
           title: "Transferencias",
-          url: "#",
+          url: "/dashboard/transferencias",
         },
         {
           title: "Historial de transferencias",
-          url: "#",
+          url: "/dashboard/estado-cuenta",
         },
       ],
     },
     {
-      title: "Models",
+      title: "Creditos",
       url: "#",
-      icon: Bot,
+      icon: Landmark,
       items: [
         {
-          title: "Genesis",
+          title: "Pago Manual",
+          url: "/dashboard/pago-manual",
+        },
+        {
+          title: "Pago Automático",
           url: "#",
         },
         {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
+          title: "Resumen de créditos",
+          url: "/dashboard/detalle-credito",
         },
       ],
     },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
+    
+
   ],
 
 };
@@ -155,7 +111,7 @@ const data = {
 
     <SidebarContent class="bg-[#002C5F] text-white ">
       <NavMain :items="data.navMain" />
-      <NavProjects :projects="data.projects" />
+      <!--<NavProjects :projects="data.projects" />-->
     </SidebarContent>
 
     <SidebarFooter class="bg-[#002C5F] text-white border-t border-white/10">

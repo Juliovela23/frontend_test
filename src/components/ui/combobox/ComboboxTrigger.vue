@@ -1,22 +1,22 @@
 <script setup>
 import { reactiveOmit } from "@vueuse/core";
-import { DialogDescription } from "reka-ui";
+import { ComboboxTrigger, useForwardProps } from "reka-ui";
 import { cn } from "@/lib/utils";
 
 const props = defineProps({
+  disabled: { type: Boolean, required: false },
   asChild: { type: Boolean, required: false },
   as: { type: [String, Object, Function], required: false },
   class: { type: null, required: false },
 });
 
 const delegatedProps = reactiveOmit(props, "class");
+
+const forwarded = useForwardProps(delegatedProps);
 </script>
 
 <template>
-  <DialogDescription
-    :class="cn('text-sm text-muted-foreground', props.class)"
-    v-bind="delegatedProps"
-  >
+  <ComboboxTrigger v-bind="forwarded" :class="cn('', props.class)" tabindex="0">
     <slot />
-  </DialogDescription>
+  </ComboboxTrigger>
 </template>

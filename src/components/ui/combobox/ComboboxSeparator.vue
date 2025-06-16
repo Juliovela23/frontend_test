@@ -1,6 +1,6 @@
 <script setup>
 import { reactiveOmit } from "@vueuse/core";
-import { DialogDescription } from "reka-ui";
+import { ComboboxSeparator } from "reka-ui";
 import { cn } from "@/lib/utils";
 
 const props = defineProps({
@@ -13,10 +13,10 @@ const delegatedProps = reactiveOmit(props, "class");
 </script>
 
 <template>
-  <DialogDescription
-    :class="cn('text-sm text-muted-foreground', props.class)"
+  <ComboboxSeparator
     v-bind="delegatedProps"
+    :class="cn('-mx-1 h-px bg-border', props.class)"
   >
     <slot />
-  </DialogDescription>
+  </ComboboxSeparator>
 </template>

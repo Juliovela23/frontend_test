@@ -7,8 +7,12 @@ export default {
   ],
   theme: {
   	extend: {
+		shine: {
+        '100%': { left: '125%' },
+      },
 		animation: {
         'pulse-bg': 'pulseBG 6s ease-in-out infinite',
+		shine: 'shine 0.8s linear forwards',
       },
       keyframes: {
         pulseBG: {

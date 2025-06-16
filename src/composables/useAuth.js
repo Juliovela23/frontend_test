@@ -40,7 +40,10 @@ export function useAuth() {
       window.location.href = '/login'
     } catch (error) {
       console.error('Error al cerrar sesión:', error)
-    }
+    }finally {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  }
   }
 
   return {

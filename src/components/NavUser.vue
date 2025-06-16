@@ -4,6 +4,7 @@ import { useAuth } from '@/composables/useAuth.js'
 const { getUser, logout } = useAuth()
 const user = ref(getUser())  // <- esto carga los datos
 const show = ref(false)
+
 //console.log('Usuario:', user) 
 
 onMounted(() => {
@@ -56,7 +57,7 @@ const { isMobile } = useSidebar();
             class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
           >
             <Avatar class="h-8 w-8 rounded-lg">
-              <AvatarImage :src="user.avatar" :alt="user.nombre" />
+           <!--   <AvatarImage :src="user.avatar" :alt="user.nombre" />-->
               <AvatarFallback class="rounded-lg"> CN </AvatarFallback>
             </Avatar>
             <div class="grid flex-1 text-left text-sm leading-tight">
@@ -108,8 +109,8 @@ const { isMobile } = useSidebar();
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
-            <LogOut />
-            Log out
+            
+            <a @click="logout">Cerrar sesion</a>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -1,22 +1,22 @@
 <script setup>
 import { reactiveOmit } from "@vueuse/core";
-import { DialogDescription } from "reka-ui";
+import { ComboboxAnchor, useForwardProps } from "reka-ui";
 import { cn } from "@/lib/utils";
 
 const props = defineProps({
+  reference: { type: null, required: false },
   asChild: { type: Boolean, required: false },
   as: { type: [String, Object, Function], required: false },
   class: { type: null, required: false },
 });
 
 const delegatedProps = reactiveOmit(props, "class");
+
+const forwarded = useForwardProps(delegatedProps);
 </script>
 
 <template>
-  <DialogDescription
-    :class="cn('text-sm text-muted-foreground', props.class)"
-    v-bind="delegatedProps"
-  >
+  <ComboboxAnchor v-bind="forwarded" :class="cn('w-[200px]', props.class)">
     <slot />
-  </DialogDescription>
+  </ComboboxAnchor>
 </template>
