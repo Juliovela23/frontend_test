@@ -1,5 +1,5 @@
 <template>
-  
+
   <div class="min-h-screen w-screen flex items-center justify-center bg-[#002C5F]">
     <div class="flex w-full max-w-4xl bg-white rounded-xl shadow-lg overflow-hidden">
       <!-- Panel Izquierdo: Login -->
@@ -14,12 +14,8 @@
         <form @submit.prevent="login" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">DPI/Usuario</label>
-            <input
-              v-model="email"
-              type="input"
-              placeholder="Ingrese su DPI o Usuario"
-              class="mt-1 w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:ring-2 focus:ring-[#002C5F] outline-none"
-            />
+            <input v-model="email" type="input" placeholder="Ingrese su DPI o Usuario"
+              class="mt-1 w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:ring-2 focus:ring-[#002C5F] outline-none" />
           </div>
 
           <div>
@@ -27,21 +23,14 @@
               <label class="block text-sm font-medium text-gray-700">Contraseña</label>
               <a href="#" class="text-sm text-[#002C5F] hover:underline">Olvido su contraseña?</a>
             </div>
-            <input
-              v-model="password"
-              type="password"
-              placeholder="••••••••"
-              class="mt-1 w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:ring-2 focus:ring-[#002C5F] outline-none"
-            />
+            <input v-model="password" type="password" placeholder="••••••••"
+              class="mt-1 w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:ring-2 focus:ring-[#002C5F] outline-none" />
           </div>
 
           <p v-if="error" class="text-red-500 text-sm text-center -mt-2">{{ error }}</p>
 
-          <button
-            type="submit"
-            :disabled="loading"
-            class="w-full px-4 py-2 rounded-md text-white bg-[#002C5F] hover:bg-[#001e42] text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" :disabled="loading"
+            class="w-full px-4 py-2 rounded-md text-white bg-[#002C5F] hover:bg-[#001e42] text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
             <span v-if="!loading">Iniciar sesion</span>
             <span v-else class="animate-pulse">Loading...</span>
           </button>
@@ -51,22 +40,31 @@
           Don't have an account?
           <a href="#" class="text-[#002C5F] hover:underline">Sign up</a>
         </p>-->
-      </div> 
+      </div>
 
 
-          <div class="hidden md:block md:w-1/2 flex items-center justify-center bg-gradient-animated rounded-r-xl">
-            <div class="text-center text-[#002C5F] p-10">
-              <img
-                src="../image/LogoInterAPP.png"
-                alt="InterApp Logo"
-                class="w-40 h-40 object-contain mx-auto mb-4"
-              />
-              
-              <p class="text-lg font-semibold mt-4">Gestiona de forma inteligente</p>
-              <p class="text-sm mt-2">Transferencias, créditos, pagos, todo en un solo lugar.</p>
-            </div>
-          </div>
+      <div class="hidden md:block md:w-1/2 flex items-center justify-center bg-gradient-animated rounded-r-xl">
+        <div class="text-center text-[#002C5F] p-10">
+          <img src="../image/LogoInterAPP.png" alt="InterApp Logo" class="w-40 h-40 object-contain mx-auto mb-4" />
+
+          <p class="text-lg font-semibold mt-4">Gestiona de forma inteligente</p>
+          <p class="text-sm mt-2">Transferencias, créditos, pagos, todo en un solo lugar.</p>
+        </div>
+      </div>
     </div>
+    <!-- Overlay de carga -->
+    <div v-if="loading"
+      class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
+      <div class="text-white text-center space-y-4">
+        <svg class="animate-spin h-10 w-10 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+        <p class="text-sm">Iniciando sesión...</p>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -76,4 +74,3 @@ import { useLogin } from '@/composables/useLogin.js'
 
 const { email, password, error, loading, login } = useLogin()
 </script>
-

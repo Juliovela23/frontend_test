@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label/index'
 export function useLogin() {
   const email = ref('')
   const password = ref('')
+  const loading = ref(false)
   const error = ref('')
   const mensaje = ref('')
   const correo = ref('')
@@ -17,13 +18,14 @@ export function useLogin() {
   const { toast } = useToast()
 
   const login = async () => {
+    loading.value = true // 👈 activar loading
     try {
       error.value = ''
       mensaje.value = ''
       correo.value = ''
 
       const response = await axios.post(
-        'https://interappapi-epdqhjbmepckfgda.canadacentral-01.azurewebsites.net/api/auth/login',
+        'https://interappapi.onrender.com/api/auth/login',
         {
           dpi: email.value,
           password: password.value
@@ -43,8 +45,8 @@ export function useLogin() {
         variant: 'success'
       })
 
-      setTimeout(() => router.push('/2fa'), 1000)
-
+      // Espera 1 segundo antes de redirigir (opcional, para mostrar overlay)
+      setTimeout(() => router.push('/2fa'), 4000)
     } catch (err) {
       console.error('Error en login:', err)
 
@@ -66,6 +68,8 @@ export function useLogin() {
           variant: 'destructive'
         })
       }
+    } finally {
+      loading.value = false 
     }
   }
 
@@ -75,6 +79,8 @@ export function useLogin() {
     error,
     mensaje,
     correo,
+    loading,
     login
   }
+
 }

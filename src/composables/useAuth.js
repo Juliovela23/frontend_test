@@ -29,7 +29,7 @@ export function useAuth() {
   const logout = async () => {
     try {
       const tkn = token.value
-      await axios.post('https://interappapi-epdqhjbmepckfgda.canadacentral-01.azurewebsites.net/api/auth/logout', {}, {
+      await axios.post('https://interappapi.onrender.com/api/auth/logout', {}, {
         headers: {
           Authorization: `Bearer ${tkn}`
         }

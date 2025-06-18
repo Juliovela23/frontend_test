@@ -16,6 +16,7 @@
                     v-model="code"
                     placeholder="○"
                     @complete="handleComplete"
+                    type="number"
                 >
                 <PinInputGroup class="gap-1">
                     <PinInputSlot
@@ -90,7 +91,7 @@ const verificar = async () => {
   }
 
   try {
-    const response = await axios.post('https://interappapi-epdqhjbmepckfgda.canadacentral-01.azurewebsites.net/api/auth/verificar-codigo', {
+    const response = await axios.post('https://interappapi.onrender.com/api/auth/verificar-codigo', {
       email,
       code: finalCode
     })
@@ -114,7 +115,7 @@ const reenviarCodigo = async () => {
 
   try {
     reenviando.value = true
-    await axios.post('https://interappapi-epdqhjbmepckfgda.canadacentral-01.azurewebsites.net/api/auth/reenviar-codigo', { email })
+    await axios.post('https://interappapi.onrender.com/api/auth/reenviar-codigo', { email })
     toast({ title: 'Código reenviado', description: 'Revisa tu correo.', variant: 'success' })
   } catch (err) {
     toast({ title: 'Error', description: 'No se pudo reenviar el código.', variant: 'destructive' })

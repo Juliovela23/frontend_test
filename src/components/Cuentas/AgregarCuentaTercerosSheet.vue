@@ -34,6 +34,13 @@ function guardarCuentaTerceros() {
     alert('¡Cuenta de terceros agregada!')
     console.log('Datos enviados:', form.value)
 }
+const tipos = [
+  { value: 'cuenta', label: 'Cuenta' },
+  { value: 'credito', label: 'Crédito' },
+  { value: 'accion', label: 'Opción General' }
+]
+const tipoSeleccionado = ref('')
+
 </script>
 
 <template>
@@ -49,16 +56,13 @@ function guardarCuentaTerceros() {
                 <SheetTitle>Añadir cuenta de terceros</SheetTitle>
             </SheetHeader>
 
-            <div class="grid gap-4 py-4">
+            <div class="grid gap-6 py-6">
                 <!-- Seleccione tipo de cuenta -->
                 <div>
                     <Label for="tipoCuenta" class="mb-1">Seleccione el tipo de cuenta</Label>
-                    <select id="tipoCuenta" v-model="form.tipoCuenta"
-                        class="w-full rounded-md border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <option value="">Seleccione...</option>
-                        <option>Cuenta corriente No. 0000</option>
-                        <option>Cuenta de ahorro No. 0001</option>
-                        <!-- Agrega más opciones aquí -->
+                    <select v-model="tipoSeleccionado" class="w-full border rounded px-3 py-2">
+                        <option disabled value="">Seleccione tipo...</option>
+                        <option v-for="tipo in tipos" :key="tipo.value" :value="tipo.value">{{ tipo.label }}</option>
                     </select>
                 </div>
 
@@ -84,7 +88,7 @@ function guardarCuentaTerceros() {
 
                 <!-- Validar cuenta -->
                 <div class="flex items-center gap-2">
-                    
+
                     <Button type="button" class="ml-auto bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-36"
                         @click="guardarCuentaTerceros">
                         Validar cuenta

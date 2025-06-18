@@ -12,7 +12,7 @@
         <div
           class="bg-yellow-400 text-black px-2 py-1 rounded font-semibold text-sm min-w-[90px] text-center transition-all duration-300"
           :class="{ 'blur-sm select-none': oculto }">
-          {{ oculto ? 'Q ••••••' : `Q ${account?.saldo?.toFixed(2) ?? '0.00'}` }}
+          {{ oculto ? 'Q ••••••' : `Q ${tweened.number.toFixed(2)}` }}
         </div>
         <div>
           <!-- OJO ANIMADO cuando el saldo está oculto -->
@@ -49,13 +49,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive, watch } from 'vue'
+import gsap from 'gsap'
 
 const props = defineProps({
   card: Object,
   account: Object,
   colorFondo: String
 })
+
+const number = ref(0)
+const tweened = reactive({
+  number: 0
+})
+watch(number, (n) => {
+  gsap.to(tweened, { duration: 0.5, number: Number(n) || 0 })
+})
+
 
 const oculto = ref(true)
 
@@ -104,11 +114,13 @@ const parpadeando = ref(false)
 
 function handleMostrarSaldo() {
   oculto.value = false
+  number.value = props.account?.saldo ?? 0 
   resetPupila()
 }
 
 function handleOcultarSaldo() {
   oculto.value = true
+  number.value = 0
 }
 
 
@@ -123,4 +135,5 @@ function handleHistorial() {
     console.log('Historial para ID:', props.card.id)
   }
 }
+
 </script>
