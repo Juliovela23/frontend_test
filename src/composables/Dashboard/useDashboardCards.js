@@ -12,6 +12,7 @@ export function useDashboardCards() {
     loading.value = true
     error.value = ''
     try {
+      
       const token = localStorage.getItem('token')
       const { data } = await axios.get(API_URL, {
         headers: { Authorization: `Bearer ${token}` }
