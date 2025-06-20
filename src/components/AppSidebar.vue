@@ -59,6 +59,22 @@ const data = {
   ],
   navMain: [
     {
+      title: "Cuentas",
+      url: "#",
+      icon: Banknote,
+      items: [
+        {
+          title: "Cuentas",
+          url: "/dashboard/cuentas",
+        },
+        {
+          title: "Estado de cuenta",
+          url: "/dashboard/estado-cuenta",
+        },
+        
+      ],  
+    },
+    {
       title: "Transferencias",
       url: "#",
       icon: Banknote,
@@ -73,7 +89,10 @@ const data = {
         },
         {
           title: "Historial de transferencias",
-          url: "/dashboard/estado-cuenta",
+          url: "#",
+        },{
+          title: "Transferencias programadas",
+          url: "/dashboard/transferencias-programadas",
         },
       ],
     },
@@ -85,6 +104,24 @@ const data = {
         {
           title: "Pago Manual",
           url: "/dashboard/pago-manual",
+        },
+        {
+          title: "Pago Automático",
+          url: "/dashboard/pago-automatico",
+        },
+        {
+          title: "Resumen de créditos",
+          url: "/dashboard/detalle-credito",
+        },
+      ],
+    },{
+      title: "Servicios",
+      url: "#",
+      icon: Landmark,
+      items: [
+        {
+          title: "Pago de servicios",
+          url: "/dashboard/pago-servicios",
         },
         {
           title: "Pago Automático",

@@ -1,23 +1,25 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
   modelValue: Object
 })
 const emit = defineEmits(['update:modelValue'])
 
-// Simulaciones de datos
 const tipos = [
   { value: 'cuenta', label: 'Cuenta' },
   { value: 'credito', label: 'Crédito' },
   { value: 'accion', label: 'Opción General' }
 ]
 
-const data = {
-  cuenta: [
-    { value: 'CUENTA_001', label: 'Cuenta Ahorro' },
-    { value: 'CUENTA_002', label: 'Cuenta Nómina' }
-  ],
+// Estado
+const tipoSeleccionado = ref('')
+const referenciaSeleccionada = ref('')
+const opcionesSecundarias = ref<any[]>([])
+
+// Datos estáticos para tipos distintos a cuenta
+const opcionesFijas = {
   credito: [
     { value: 'CREDITO_001', label: 'Crédito Vehicular' },
     { value: 'CREDITO_002', label: 'Crédito Hipotecario' }
@@ -28,16 +30,35 @@ const data = {
   ]
 }
 
-// Estado interno local
-const tipoSeleccionado = ref('')
-const referenciaSeleccionada = ref('')
+// Cargar cuentas desde la API
+async function cargarCuentas() {
+  try {
+    const token = localStorage.getItem('token')
+    const { data } = await axios.get('https://interappapi.onrender.com/api/cuentas/mis-cuentas', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
 
-// Computa opciones secundarias según tipo
-const opcionesSecundarias = computed(() => {
-  return tipoSeleccionado.value ? data[tipoSeleccionado.value] : []
+    opcionesSecundarias.value = data.map((cuenta: any) => ({
+      value: cuenta.noCuenta,
+      label: `${cuenta.noCuenta} - ${cuenta.nombreCuenta}`
+    }))
+  } catch (error) {
+    console.error('Error al cargar cuentas:', error)
+    opcionesSecundarias.value = []
+  }
+}
+
+// Reaccionar cuando cambia el tipo
+watch(tipoSeleccionado, async (nuevoTipo) => {
+  referenciaSeleccionada.value = ''
+  if (nuevoTipo === 'cuenta') {
+    await cargarCuentas()
+  } else {
+    opcionesSecundarias.value = opcionesFijas[nuevoTipo] ?? []
+  }
 })
 
-// Emitir cuando cambia cualquiera
+// Emitir cuando cambie tipo o referencia
 watch([tipoSeleccionado, referenciaSeleccionada], () => {
   emit('update:modelValue', {
     tipo: tipoSeleccionado.value,

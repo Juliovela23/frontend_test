@@ -33,7 +33,7 @@ export function useAuth() {
         headers: {
           Authorization: `Bearer ${tkn}`
         }
-      })
+      })    
 
       clearToken()
       localStorage.clear()

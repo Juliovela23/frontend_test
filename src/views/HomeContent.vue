@@ -1,40 +1,54 @@
 <template>
-<div class="flex-1 p-4 pt-0 space-y-4">
-
-
-        <!-- ✅ Carrusel (sin el botón “+” dentro) -->
-        <Carousel v-if="usaCarrusel" class="w-full max-w-screen-lg mx-auto" :opts="{ align: 'start' }">
-          <CarouselContent class="px-4 pr-4 gap-4">
-            <CarouselItem v-for="card in cards" :key="card.id" class="shrink-0 grow-0 basis-[300px]">
-              <AccountCard :card="card" :account="cuentasSimuladas[card.referenciaId]" :colorFondo="card.colorFondo" />
-            </CarouselItem>
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
-        <!-- ✅ Botón Agregar SIEMPRE visible si hay más de 6 -->
-
-        <div v-if="usaCarrusel" class="w-full max-w-screen-lg mx-auto flex justify-start">
-          <SheetForm>
-          </SheetForm>
-
-        </div>
-        <!-- ✅ Grid normal si son 6 o menos (botón incluido al final) -->
-         
-        <div v-else class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-          
-          <AccountCard v-for="card in cards" :key="card.id" :card="card" :account="cuentasSimuladas[card.referenciaId]"
-            :colorFondo="card.colorFondo" />
-          <!-- Botón “+” dentro del grid -->
-          <SheetForm>
-          </SheetForm>
-        </div>
+  <div class="flex-1 p-4 pt-0 space-y-4">
+    <!-- Loader: se muestra hasta que TODO está listo -->
+    <div v-if="loading">
+      <div v-if="loaderType === 'spinner'" class="flex items-center justify-center min-h-[200px] w-full">
+        <svg class="animate-spin h-10 w-10 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4A8 8 0 104 12z"/>
+        </svg>
+        <span class="ml-4 text-lg text-cyan-800">Cargando tarjetas...</span>
       </div>
+      <div v-else-if="loaderType === 'skeleton'" class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 my-8">
+        <div v-for="n in 3" :key="n" class="bg-gray-200 rounded-xl shadow-md h-[180px] w-[300px] animate-pulse"></div>
+      </div>
+    </div>
 
-      <NoticiasCard class="w-full max-w-screen-lg mx-auto mt-4" />
+    <!-- Cards y contenido solo si !loading -->
+    <div v-else>
+      <Carousel v-if="usaCarrusel" class="w-full max-w-screen-lg mx-auto" :opts="{ align: 'start' }">
+        <CarouselContent class="px-4 pr-4 gap-4">
+          <CarouselItem v-for="card in cards" :key="card.id" class="shrink-0 grow-0 basis-[300px]">
+            <AccountCard
+              :card="card"
+              :account="infoCards[card.referenciaId] ?? null"
+              :colorFondo="card.colorFondo"
+            />
+          </CarouselItem>
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
+      <div v-if="usaCarrusel" class="w-full max-w-screen-lg mx-auto flex justify-start">
+        <SheetForm @created="fetchCards"/>
+      </div>
+      <div v-else class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+        <AccountCard
+          v-for="card in cards"
+          :key="card.id"
+          :card="card"
+          :account="infoCards[card.referenciaId] ?? null"
+          :colorFondo="card.colorFondo"
+        />
+        <SheetForm @created="fetchCards"/>
+      </div>
+    </div>
+    <NoticiasCard class="w-full max-w-screen-lg mx-auto mt-4" />
+  </div>
 </template>
+
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AccountCard from '../components/cards/AccountCard.vue';
 import SheetForm from '../components/cards/SheetForm.vue';
 import NoticiasCard from '../components/NoticiasCard.vue';
@@ -45,35 +59,77 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { useAuth } from '@/composables/useAuth.js';const cards = [
-  { id: '1', tipo: 'cuenta', referenciaId: 'CUENTA_001', tituloPersonalizado: 'Mi Cuenta Principal', icono: 'wallet', colorFondo: '#0055ff', orden: 1 },
-  { id: '2', tipo: 'cuenta', referenciaId: 'CUENTA_002', tituloPersonalizado: 'Cuenta Jubilacion', icono: 'wallet', colorFondo: '#002244', orden: 2 },
-  { id: '3', tipo: 'cuenta', referenciaId: 'CUENTA_003', tituloPersonalizado: 'Cuenta Mujer cooperativista', icono: 'wallet', colorFondo: '#ff4fa1', orden: 3 },
-  { id: '4', tipo: 'cuenta', referenciaId: 'CUENTA_004', tituloPersonalizado: 'Cuenta de Ahorro', icono: 'wallet', colorFondo: '#6b21a8', orden: 4 },
-  { id: '5', tipo: 'cuenta', referenciaId: 'CUENTA_005', tituloPersonalizado: 'Mi Segunda Cuenta', icono: 'wallet', colorFondo: '#0f766e', orden: 5 },
-  { id: '6', tipo: 'cuenta', referenciaId: 'CUENTA_006', tituloPersonalizado: 'Mi Tercer Ahorro', icono: 'wallet', colorFondo: '#b45309', orden: 6 },
-  { id: '7', tipo: 'cuenta', referenciaId: 'CUENTA_007', tituloPersonalizado: 'Cuenta Opcional', icono: 'wallet', colorFondo: '#334155', orden: 7 },
-  { id: '8', tipo: 'cuenta', referenciaId: 'CUENTA_007', tituloPersonalizado: 'Cuenta Opcional', icono: 'wallet', colorFondo: '#334155', orden: 8 },
-  
+import axios from 'axios';
 
+const loaderType = ref<'spinner' | 'skeleton'>('spinner');
+const loading = ref(false);
+const error = ref('');
+const cards = ref<any[]>([]);
+const infoCards = ref<Record<string, any>>({}); // Mapea referenciaId → data real
 
+// Trae datos de cuenta por referenciaId
+async function obtenerDatosCard(card: any) {
+  const token = localStorage.getItem('token');
+  try {
+    if (card.tipo?.toLowerCase() === 'cuenta') {
+      //console.log('Obteniendo datos de card:', encodeURIComponent(card.referenciaId));
 
-
-]
-
-const cuentasSimuladas = {
-  CUENTA_001: { numeroCuenta: '001-234567-8', nombre: 'Nombre cuenta', saldo: 15000.55 },
-  CUENTA_002: { numeroCuenta: '000-000000-0', nombre: 'Nombre cuenta', saldo: 25000.00 },
-  CUENTA_003: { numeroCuenta: '000-000000-0', nombre: 'Nombre cuenta', saldo: 25000.00 },
-  CUENTA_004: { numeroCuenta: '003-001000-7', nombre: 'Mi ahorro', saldo: 18500.75 },
-  CUENTA_005: { numeroCuenta: '004-982398-3', nombre: 'Cuenta secundaria', saldo: 8200.00 },
-  CUENTA_006: { numeroCuenta: '005-442222-1', nombre: 'Fondo personal', saldo: 42000.00 },
-  CUENTA_007: { numeroCuenta: '006-654321-9', nombre: 'Inversion joven', saldo: 11000.50 }
+      const { data } = await axios.get(
+        `https://interappapi.onrender.com/api/cuentas/buscar-cuenta?numCuenta=${encodeURIComponent(card.referenciaId)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log('Datos de cuenta:', data);
+      return data;
+    }
+    // Si luego tienes crédito, agregar aquí
+    return null;
+  } catch (e) {
+    return null;
+  }
 }
 
-const usaCarrusel = computed(() => cards.length > 8)
+async function fetchCards() {
+  try {
+    loading.value = true;
+    error.value = '';
+    const token = localStorage.getItem('token');
+    const { data } = await axios.get('https://interappapi.onrender.com/api/shortcuts', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    console.log('Cards obtenidas:', cards.value);
+    // Busca la info real de cada card (en paralelo)
+    const infos = await Promise.all(
+      data.map(async (card: any) => {
+        let info = null;
+        if (card.tipo?.toLowerCase() === 'cuenta') {
+          info = await obtenerDatosCard(card);
+          
+        }
+        // Otros tipos en el futuro aquí
+        return { key: card.referenciaId, info };
+      })
+    );
+    console.log('Infos obtenidas:', infos);
+    cards.value = data;
 
-function abrirModalAgregar() {
-  console.log('Abrir modal para agregar tarjeta o acceso directo')
+    // Mapear infoCards
+    infoCards.value = {};
+    for (const { key, info } of infos) {
+      if (key) infoCards.value[key] = info;
+    }
+    console.log('infoCards.keys:', Object.keys(infoCards.value));
+    console.log('referenciaId en cards:', cards.value.map(c => c.referenciaId));
+  } catch (e) {
+    error.value = 'No se pudieron cargar tus accesos directos';
+    cards.value = [];
+    infoCards.value = {};
+  } finally {
+    loading.value = false;
+  }
 }
+
+
+onMounted(fetchCards);
+
+const usaCarrusel = computed(() => cards.value.length > 8);
 </script>

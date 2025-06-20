@@ -23,7 +23,7 @@ defineProps({
 
 <template>
   <SidebarGroup>
-    <SidebarGroupLabel class="text-color=white">Servicios</SidebarGroupLabel>
+    <SidebarGroupLabel class="text-color=white"></SidebarGroupLabel>
     <SidebarMenu>
       <Collapsible
         v-for="item in items"

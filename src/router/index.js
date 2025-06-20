@@ -8,6 +8,9 @@ import TransferenciasContent from '../views/Cuentas/TransferenciasContent.vue'
 import EstadoCuentaContent from '../views/Cuentas/EstadoCuentaContent.vue'
 import PagoManualContent from '@/views/Creditos/PagoManualContent.vue'
 import DetalleCredito from '@/views/Creditos/DetalleCredito.vue'
+import PagoServiciosView from '@/views/Servicios/PagoServiciosView.vue'
+import TransferenciasProgramadasview from '@/views/Transferencias/TransferenciasProgramadasview.vue'
+import PagoAutomaticoView from '@/views/Creditos/PagoAutomaticoView.vue'
 // ...otros imports
 
 const routes = [
@@ -21,9 +24,12 @@ const routes = [
       { path: '', name: 'DashboardHome', component: HomeContent },
       { path: 'cuentas', name: 'DashboardCuentas', component: CuentasContent },
       { path: 'transferencias', name: 'DashboardTransferencias', component: TransferenciasContent },
-      {path: 'estado-cuenta', name: 'DashboardEstadoCuenta', component: EstadoCuentaContent },
-      {path: 'pago-manual', name: 'DashboardPagoManual', component: PagoManualContent },
-      {path: 'detalle-credito', name: 'DashboardDetalleCredito', component: DetalleCredito },
+      { path: 'estado-cuenta', name: 'DashboardEstadoCuenta', component: EstadoCuentaContent },
+      { path: 'pago-manual', name: 'DashboardPagoManual', component: PagoManualContent },
+      { path: 'detalle-credito', name: 'DashboardDetalleCredito', component: DetalleCredito },
+      { path: 'pago-servicios', name: 'DashboardPagoServicios', component: PagoServiciosView },
+      { path: 'transferencias-programadas', name: 'DashboardTransferenciasProgramadas', component: TransferenciasProgramadasview },
+      { path: 'pago-automatico', name: 'DashboardPagoAutomatico', component: PagoAutomaticoView },
       // ...más hijos si los necesitas
     ]
   }

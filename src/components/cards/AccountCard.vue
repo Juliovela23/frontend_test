@@ -5,8 +5,8 @@
     <div class="flex justify-between items-start">
       <div>
         <p class="font-semibold text-lg">{{ card?.tituloPersonalizado }}</p>
-        <p class="text-sm opacity-90">{{ account?.numeroCuenta ?? '---' }}</p>
-        <p class="text-sm opacity-90">{{ account?.nombre ?? '---' }}</p>
+        <p class="text-sm opacity-90">{{ account?.noCuenta ?? '---' }}</p>
+        <p class="text-sm opacity-90">{{ account?.nombreCuenta ?? '---' }}</p>
       </div>
       <div class="flex items-center gap-1">
         <div
@@ -114,7 +114,7 @@ const parpadeando = ref(false)
 
 function handleMostrarSaldo() {
   oculto.value = false
-  number.value = props.account?.saldo ?? 0 
+  number.value = props.account?.saldoCuenta ?? 0 
   resetPupila()
 }
 
