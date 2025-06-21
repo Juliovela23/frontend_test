@@ -12,24 +12,34 @@ const app = createApp(App)
 //app.use(createToast())
 
 app.use(router)
-/**
+
 axios.interceptors.response.use(
   response => response,
   error => {
-    // Si la respuesta es 401, es que el token caducó o es inválido
     if (error.response && error.response.status === 401) {
-      // Limpia token y datos de usuario
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      // Opcional: muestra mensaje al usuario
-      alert('Tu sesión ha caducado. Por favor inicia sesión de nuevo.')
-      // Redirige al login
-      router.push('/login')
+      // Leer mensaje que manda tu API (ajusta la propiedad según cómo venga tu backend)
+      const mensaje = error.response.data?.message || error.response.data?.error || ''
+      if (
+        mensaje.toLowerCase().includes('token') ||
+        mensaje.toLowerCase().includes('expirad') ||
+        mensaje.toLowerCase().includes('expired') ||
+        mensaje.toLowerCase().includes('invalid')
+      ) {
+        // Solo aquí limpiar y sacar
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        // Muestra un toast aquí si tienes uno custom
+        alert('Tu sesión ha caducado. Por favor inicia sesión de nuevo.')
+        router.push('/login')
+      } else {
+        // Aquí puedes mostrar un toast de error normal
+        // Ejemplo: toast({ title: 'Acceso denegado', description: mensaje, variant: 'destructive' })
+      }
     }
-    // Sigue lanzando el error para que otros catchs lo reciban
     return Promise.reject(error)
   }
-) */
+)
+
 app.mount('#app')
 
 
