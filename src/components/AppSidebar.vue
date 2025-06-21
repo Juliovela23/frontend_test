@@ -80,10 +80,6 @@ const data = {
       icon: Banknote,
       items: [
         {
-          title: "Cuentas",
-          url: "/dashboard/cuentas",
-        },
-        {
           title: "Transferencias",
           url: "/dashboard/transferencias",
         },

@@ -5,11 +5,14 @@ import router from './router'
 import '@fortawesome/fontawesome-free/css/all.css'
 import axios from 'axios'
 import App from './App.vue'
+import { useSessionExpiredToast } from './composables/useSessionExpiredToast'
 //import { createToast } from '@/components/ui/toast/use-toast'
 
 const app = createApp(App)
 //app.use(createToast())
+
 app.use(router)
+/**
 axios.interceptors.response.use(
   response => response,
   error => {
@@ -26,7 +29,7 @@ axios.interceptors.response.use(
     // Sigue lanzando el error para que otros catchs lo reciban
     return Promise.reject(error)
   }
-)
+) */
 app.mount('#app')
 
 

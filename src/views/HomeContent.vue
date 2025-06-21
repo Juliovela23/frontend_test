@@ -22,11 +22,11 @@
         class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4" @end="actualizarOrden">
         <template #item="{ element }">
           <div class="drag-handle cursor-move">
-            <AccountCard :card="element" :account="infoCards[element.referenciaId] ?? null"
-              :colorFondo="element.colorFondo" />
+            <SmartCard :card="element" :info="infoCards[element.referenciaId]" :colorFondo="element.colorFondo" />
           </div>
         </template>
       </draggable>
+
       <br>
       <SheetForm @created="fetchCards" />
     </div>
@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AccountCard from '../components/cards/AccountCard.vue'
+import SmartCard from '@/components/cards/SmartCard.vue'
 import SheetForm from '../components/cards/SheetForm.vue'
 import NoticiasCard from '../components/NoticiasCard.vue'
 import draggable from 'vuedraggable'
@@ -50,21 +51,31 @@ const error = ref('')
 const cards = ref<any[]>([])
 const infoCards = ref<Record<string, any>>({})
 
-async function obtenerDatosCard(card: any) {
-  const token = localStorage.getItem('token')
+// En tu script de la Home
+async function obtenerDatosCard(card) {
+  const token = localStorage.getItem('token');
   try {
-    if (card.tipo?.toLowerCase() === 'cuenta') {
+    if (card.tipo === 'cuenta' && card.referenciaId) {
       const { data } = await axios.get(
         `https://interappapi.onrender.com/api/cuentas/buscar-cuenta?numCuenta=${encodeURIComponent(card.referenciaId)}`,
         { headers: { Authorization: `Bearer ${token}` } }
-      )
-      return data
+      );
+      return data;
     }
-    return null
+    if (card.tipo === 'credito' && card.referenciaId) {
+      const { data } = await axios.get(
+        `https://interappapi.onrender.com/api/creditos/buscar-credito?codigo=${encodeURIComponent(card.referenciaId)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return data;
+    }
+    // Tipo acción u otro
+    return null;
   } catch (e) {
-    return null
+    return null;
   }
 }
+
 
 async function fetchCards() {
   try {
@@ -74,12 +85,20 @@ async function fetchCards() {
     const { data } = await axios.get('https://interappapi.onrender.com/api/shortcuts', {
       headers: { Authorization: `Bearer ${token}` }
     })
+    // Normalizar tipo a minúscula para cada card
+    data.forEach(card => {
+      card.tipo = card.tipo?.toLowerCase() || '';
+    });
     const infos = await Promise.all(
-      data.map(async (card: any) => {
+      data.map(async (card) => {
         let info = null
-        if (card.tipo?.toLowerCase() === 'cuenta') {
+        if (card.tipo === 'cuenta') {
           info = await obtenerDatosCard(card)
         }
+        if (card.tipo === 'credito') {
+          info = await obtenerDatosCard(card)
+        }
+        // ...otros tipos...
         return { key: card.referenciaId, info }
       })
     )
@@ -96,6 +115,7 @@ async function fetchCards() {
     loading.value = false
   }
 }
+
 
 async function actualizarOrden() {
   cards.value.forEach((card, index) => {

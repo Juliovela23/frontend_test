@@ -54,23 +54,42 @@
     </div>
     <!-- Overlay de carga -->
     <div v-if="loading"
-      class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
-      <div class="text-white text-center space-y-4">
-        <svg class="animate-spin h-10 w-10 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none"
-          viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+      class="fixed inset-0 z-50 bg-black bg-opacity-50 flex flex-col items-center justify-center backdrop-blur-sm">
+      <div class="pl mb-4">
+        <svg class="pl" width="240" height="240" viewBox="0 0 240 240">
+          <circle class="pl__ring pl__ring--a" cx="120" cy="120" r="105" fill="none" stroke="#000" stroke-width="20"
+            stroke-dasharray="0 660" stroke-dashoffset="-330" stroke-linecap="round"></circle>
+          <circle class="pl__ring pl__ring--b" cx="120" cy="120" r="35" fill="none" stroke="#000" stroke-width="20"
+            stroke-dasharray="0 220" stroke-dashoffset="-110" stroke-linecap="round"></circle>
+          <circle class="pl__ring pl__ring--c" cx="85" cy="120" r="70" fill="none" stroke="#000" stroke-width="20"
+            stroke-dasharray="0 440" stroke-linecap="round"></circle>
+          <circle class="pl__ring pl__ring--d" cx="155" cy="120" r="70" fill="none" stroke="#000" stroke-width="20"
+            stroke-dasharray="0 440" stroke-linecap="round"></circle>
         </svg>
-        <p class="text-sm">Iniciando sesión...</p>
       </div>
+      <p class="text-white text-sm">Iniciando sesión...</p>
     </div>
+
 
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useLogin } from '@/composables/useLogin.js'
+import { useToast } from '@/components/ui/toast/use-toast'
+import '../assets/loading-rings.css'
 
+const { toast } = useToast()
+onMounted(() => {
+  if (localStorage.getItem('showSessionExpiredToast')) {
+    toast({
+      title: 'Sesión expirada',
+      description: 'Por favor inicia sesión de nuevo.',
+      variant: 'destructive'
+    })
+    localStorage.removeItem('showSessionExpiredToast')
+  }
+})
 const { email, password, error, loading, login } = useLogin()
 </script>

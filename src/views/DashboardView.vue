@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth.js'
+import NotificationBell from '../components/Dashboard/NotificationBell.vue'
 
 import AppSidebar from '../components/AppSidebar.vue'
 import {
@@ -61,6 +62,7 @@ const { isAuthenticated, logout } = useAuth()
       <header class="flex h-16 items-center gap-2 px-4">
         <SidebarTrigger class="-ml-1" />
         <Separator orientation="vertical" class="mr-2 h-4" />
+
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem class="hidden md:block">
@@ -76,19 +78,26 @@ const { isAuthenticated, logout } = useAuth()
                   {{ fechaHora }}
                 </span>
               </div>
+
             </BreadcrumbItem>
             <!-- <BreadcrumbSeparator class="hidden md:block" />-->
             <BreadcrumbItem>
 
+
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        <div class="fixed top-4 right-4 z-50">
+          <NotificationBell />
+        </div>
+
       </header>
+
       <!-- Contenido principal de la página -->
-       <div class="flex-1 p-4 pt-0 space-y-4">
+      <div class="flex-1 p-4 pt-0 space-y-4">
         <router-view />
       </div>
-      
+
     </SidebarInset>
   </SidebarProvider>
 </template>
