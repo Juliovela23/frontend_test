@@ -164,12 +164,25 @@ onBeforeUnmount(() => {
           </li>
         </ul>
 
-        <button @click="marcarTodas"
-          class="w-full text-sm text-blue-600 hover:bg-gray-50 transition py-2 border-t">Marcar todas como leídas</button>
+        <!-- Footer -->
+        <div class="border-t">
+          <button @click="marcarTodas"
+            class="w-full text-sm text-blue-600 hover:bg-gray-50 transition py-2">
+            Marcar todas como leídas
+          </button>
+          <a
+            href="/dashboard/notificaciones"
+            @click="dropdownOpen = false"
+            class="block text-center text-sm text-gray-600 hover:text-blue-600 hover:underline py-2 transition"
+          >
+            Ver todas
+          </a>
+        </div>
       </div>
     </transition>
   </div>
 </template>
+
 
 <style scoped>
 .fade-slide-enter-active,

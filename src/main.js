@@ -16,29 +16,27 @@ app.use(router)
 axios.interceptors.response.use(
   response => response,
   error => {
-    if (error.response && error.response.status === 401) {
-      // Leer mensaje que manda tu API (ajusta la propiedad según cómo venga tu backend)
-      const mensaje = error.response.data?.message || error.response.data?.error || ''
-      if (
-        mensaje.toLowerCase().includes('token') ||
-        mensaje.toLowerCase().includes('expirad') ||
-        mensaje.toLowerCase().includes('expired') ||
-        mensaje.toLowerCase().includes('invalid')
-      ) {
-        // Solo aquí limpiar y sacar
+    const status = error.response?.status
+    const mensaje = error.response?.data?.mensaje || ''
+
+    if (status === 401) {
+      // Verificamos si el mensaje es específicamente el que manda el backend
+      if (mensaje.toLowerCase().includes('caducado') || mensaje.toLowerCase().includes('token')) {
+        // Limpiamos token y redirigimos
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-        // Muestra un toast aquí si tienes uno custom
-        alert('Tu sesión ha caducado. Por favor inicia sesión de nuevo.')
+        alert('Tu sesión ha caducado. Por favor, inicia sesión de nuevo.')
         router.push('/login')
       } else {
-        // Aquí puedes mostrar un toast de error normal
-        // Ejemplo: toast({ title: 'Acceso denegado', description: mensaje, variant: 'destructive' })
+        // Otro tipo de 401 (no autenticado por otra causa)
+        alert('Acceso no autorizado.')
       }
     }
+
     return Promise.reject(error)
   }
 )
+
 
 app.mount('#app')
 

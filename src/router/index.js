@@ -11,6 +11,7 @@ import DetalleCredito from '@/views/Creditos/DetalleCredito.vue'
 import PagoServiciosView from '@/views/Servicios/PagoServiciosView.vue'
 import TransferenciasProgramadasview from '@/views/Transferencias/TransferenciasProgramadasview.vue'
 import PagoAutomaticoView from '@/views/Creditos/PagoAutomaticoView.vue'
+import NotificacionesView from '@/views/Dashboard/NotificacionesView.vue'
 // ...otros imports
 
 const routes = [
@@ -30,6 +31,7 @@ const routes = [
       { path: 'pago-servicios', name: 'DashboardPagoServicios', component: PagoServiciosView },
       { path: 'transferencias-programadas', name: 'DashboardTransferenciasProgramadas', component: TransferenciasProgramadasview },
       { path: 'pago-automatico', name: 'DashboardPagoAutomatico', component: PagoAutomaticoView },
+      {path: 'notificaciones', name: 'DashboardNotificaciones', component: NotificacionesView },
       // ...más hijos si los necesitas
     ]
   }
