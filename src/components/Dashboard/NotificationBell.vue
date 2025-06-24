@@ -52,11 +52,13 @@ const cargarNotificaciones = async () => {
 // PUT /api/notificaciones/leida/{id}
 const marcarLeida = async (id) => {
   try {
+
     await axios.put(
       `https://interappapi.onrender.com/api/notificaciones/leida/${id}`,
       {}, // payload vacío
       { headers: getAuthHeaders() }
     )
+
     const n = notificaciones.value.find(n => n.id === id)
     if (n) n.leida = true
   } catch (err) {
@@ -87,7 +89,7 @@ const responderSolicitud = async (id, estado) => {
     const n = notificaciones.value.find(n => n.id === id)
     if (n) n.estado = estado
   } catch (err) {
-    console.error('Error al actualizar solicitud:', err)
+    console.error('Error al responder solicitud:', err)
   }
 }
 

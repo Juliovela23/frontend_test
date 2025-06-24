@@ -13,6 +13,7 @@ const { toast } = useToast()
 
 const form = ref({
     numeroCuenta: '',
+    alias: '',         // 👈 nuevo campo
     motivo: '',
     canalEnvio: '',
     token: '',
@@ -62,7 +63,7 @@ async function verificarCuenta() {
 
 
 async function solicitarToken() {
-   
+
     errorMsg.value = ''
     if (!form.value.canalEnvio) {
         errorMsg.value = 'Selecciona un canal para recibir el token.'
@@ -70,10 +71,10 @@ async function solicitarToken() {
     }
     if (form.value.canalEnvio == "SMS") {
         toast({
-                title: '¡Atencion!',
-                description: 'Esto esta aun en implementacion.',
-                variant: 'destructive',
-            })
+            title: '¡Atencion!',
+            description: 'Esto esta aun en implementacion.',
+            variant: 'destructive',
+        })
         //alert('El envío de token por SMS se implementará pronto.')
         return
     } else {
@@ -82,7 +83,7 @@ async function solicitarToken() {
         try {
             // El backend toma userId del JWT, así que solo mandamos estos dos campos
             const response = await axios.post('https://interappapi.onrender.com/api/cuentas/solicitar-codigo-validacion', {
-                tipoSolicitud: 'AgregarCuenta',             // Puedes parametrizarlo si gustas
+                tipoSolicitud: 'AgregarCuentaTercero',             // Puedes parametrizarlo si gustas
                 enviadoPor: form.value.canalEnvio           // Debe ser 'email' o 'sms' según opción
             }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -105,16 +106,52 @@ async function solicitarToken() {
 
 async function agregarCuenta() {
     errorMsg.value = ''
+
     if (!form.value.token) {
         errorMsg.value = 'Ingresa el token recibido.'
         return
     }
+
+    if (!form.value.numeroCuenta || !form.value.alias || !form.value.motivo ) {
+        errorMsg.value = 'Completa todos los campos requeridos.'
+        return
+    }
+
     loadingAgregar.value = true
-    // Aquí deberías validar el token y guardar la cuenta
-    await new Promise(r => setTimeout(r, 900))
-    loadingAgregar.value = false
-    alert('¡Cuenta de terceros agregada!')
+
+    try {
+        const response = await fetch('https://interappapi.onrender.com/api/cuentas-terceros', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                
+                noCuenta: form.value.numeroCuenta,
+                aliasCuenta: form.value.alias,
+                razonAgregada: form.value.motivo,
+                codigoVerificacion: form.value.token
+            })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+            throw new Error(data.mensaje || 'Error al agregar cuenta.')
+        }
+
+        alert('✅ ' + data.mensaje)
+        // puedes limpiar el formulario si deseas
+
+
+    } catch (err) {
+        errorMsg.value = err.message
+    } finally {
+        loadingAgregar.value = false
+    }
 }
+
 
 const canales = [
     { value: 'correo', label: 'Correo electrónico' },
@@ -123,7 +160,7 @@ const canales = [
 </script>
 
 <template>
-     <Toaster />
+    <Toaster />
     <Sheet>
         <SheetTrigger as-child>
             <button type="button"
@@ -157,7 +194,11 @@ const canales = [
                     <div><b>Tipo:</b> {{ datosCuenta.tipo }}</div>
                     <div><b>Número:</b> {{ datosCuenta.numero }}</div>
                 </div>
-
+                <!-- Alias para la cuenta -->
+                <div v-if="cuentaVerificada">
+                    <Label for="alias" class="mb-1">Alias para la cuenta</Label>
+                    <Input id="alias" v-model="form.alias" placeholder="Ej: nombre de la persona" />
+                </div>
                 <!-- Motivo o razón -->
                 <div v-if="cuentaVerificada">
                     <Label for="motivo" class="mb-1">Razón para usar la cuenta</Label>

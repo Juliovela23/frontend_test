@@ -1,6 +1,8 @@
 <template>
   <div class="flex justify-center w-full pt-6">
-    <div class="bg-[#e7eef6] rounded-2xl p-8 shadow-xl w-full max-w-xl min-w-[320px] sm:max-w-2xl flex flex-col items-center">
+    <div
+      class="bg-[#e7eef6] rounded-2xl p-8 shadow-xl w-full max-w-xl min-w-[320px] sm:max-w-2xl flex flex-col items-center"
+    >
       <h2 class="text-xl sm:text-2xl font-bold text-[#15385c] mb-4 text-center">
         Realizar una transferencia
       </h2>
@@ -26,36 +28,54 @@
             <label class="font-semibold text-[#15385c]">Cuenta de origen</label>
             <span class="text-xs text-[#15385c] opacity-80">Fondos disponibles</span>
           </div>
-          <select class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]" v-model="cuentaOrigen">
+          <select
+            class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
+            v-model="cuentaOrigen"
+          >
             <option value="">Selecciona una cuenta</option>
             <option v-for="c in cuentas" :key="c.id" :value="c.id">{{ c.nombre }}</option>
           </select>
         </div>
 
-        <!-- Dinámico según tipo -->
+        <!-- Cuenta destino -->
         <div v-if="tipo === 'propia'">
           <label class="font-semibold text-[#15385c]">Cuenta destino (Propia)</label>
-          <select class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]" v-model="cuentaDestino">
+          <select
+            class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
+            v-model="cuentaDestino"
+          >
             <option value="">Selecciona una cuenta</option>
             <option v-for="c in cuentas" :key="c.id" :value="c.id">{{ c.nombre }}</option>
           </select>
         </div>
+
         <div v-else>
           <div class="flex items-center gap-2 mb-1">
             <label class="font-semibold text-[#15385c] mb-0">Cuenta destino (Tercero)</label>
-            <AgregarCuentaTercerosSheet>
-              
-            </AgregarCuentaTercerosSheet>
+            <AgregarCuentaTercerosSheet />
           </div>
-          <input
-            type="text"
+
+          <select
+            v-model="cuentaTerceroSeleccionada"
             class="w-full p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
-            placeholder="Escriba su cuenta destino"
-            v-model="cuentaTercero"
+          >
+            <option value="">Selecciona una cuenta</option>
+            <option v-for="c in cuentasTerceros" :key="c.id" :value="c.noCuenta">
+              {{ c.aliasCuenta }} - {{ c.noCuenta }}
+            </option>
+            <option value="manual">Ingresar una cuenta manualmente</option>
+          </select>
+
+          <input
+            v-if="cuentaTerceroSeleccionada === 'manual'"
+            v-model="cuentaTerceroManual"
+            type="text"
+            placeholder="Escriba la cuenta destino"
+            class="w-full mt-2 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
           />
         </div>
 
-        <!-- Monto a transferir -->
+        <!-- Monto -->
         <div>
           <label class="font-semibold text-[#15385c]">Monto a transferir</label>
           <input
@@ -81,7 +101,10 @@
         <!-- Token de validación -->
         <div>
           <label class="font-semibold text-[#15385c]">Token de validación</label>
-          <select class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]" v-model="tokenEnvio">
+          <select
+            class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
+            v-model="tokenEnvio"
+          >
             <option value="">Seleccione una opción para envío de token</option>
             <option value="email">Correo</option>
             <option value="sms">SMS</option>
@@ -93,7 +116,7 @@
           <input
             type="text"
             class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
-            placeholder="Introduzca el token de validación, para agregar cuenta"
+            placeholder="Introduzca el token de validación"
             v-model="token"
           />
         </div>
@@ -111,22 +134,66 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-const tipo = ref('propia')
+import { ref, onMounted, computed } from 'vue'
+import axios from 'axios'
 import AgregarCuentaTercerosSheet from '@/components/Cuentas/AgregarCuentaTercerosSheet.vue'
+
+const tipo = ref('propia')
 const cuentaOrigen = ref('')
 const cuentaDestino = ref('')
-const cuentaTercero = ref('')
-const cuentas = ref([
-  { id: 1, nombre: 'Cuenta corriente No. 0000' },
-  { id: 2, nombre: 'Cuenta ahorro No. 1111' }
-])
+const cuentaTerceroSeleccionada = ref('')
+const cuentaTerceroManual = ref('')
 const monto = ref('')
 const descripcion = ref('')
 const tokenEnvio = ref('')
 const token = ref('')
 
-function agregarCuentaTercero() {
-  alert('Funcionalidad para agregar cuenta de terceros (puedes abrir un modal aquí)');
+const cuentas = ref([
+  { id: 1, nombre: 'Cuenta corriente No. 0000' },
+  { id: 2, nombre: 'Cuenta ahorro No. 1111' }
+])
+
+const cuentasTerceros = ref([])
+
+const cargarCuentasTerceros = async () => {
+  try {
+    const res = await axios.get('https://interappapi.onrender.com/api/terceros-user', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    console.log('Cuentas de terceros:', res.data)
+    cuentasTerceros.value = res.data
+  } catch (error) {
+    console.error('Error al cargar cuentas de terceros:', error)
+  }
 }
+
+onMounted(() => {
+  cargarCuentasTerceros()
+})
+
+const cuentaTercero = computed(() =>
+  cuentaTerceroSeleccionada.value === 'manual'
+    ? cuentaTerceroManual.value
+    : cuentaTerceroSeleccionada.value
+)
 </script>
+
+<style scoped>
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 250ms ease;
+  transform-origin: top right;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
+}
+</style>
