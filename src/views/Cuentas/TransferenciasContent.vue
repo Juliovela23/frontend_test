@@ -46,23 +46,58 @@
             </option>
           </select>
         </div>
+        <!-- Cuenta destino para terceros con Listbox -->
         <div v-else>
           <div class="flex items-center gap-2 mb-1">
             <label class="font-semibold text-[#15385c] mb-0">Cuenta destino (Tercero)</label>
             <AgregarCuentaTercerosSheet />
           </div>
-          <select v-model="cuentaTerceroSeleccionada"
-            class="w-full p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]">
-            <option value="">Selecciona una cuenta</option>
-            <option v-for="c in cuentasTerceros" :key="c.id" :value="c.noCuenta">
-              {{ c.aliasCuenta }} - {{ c.noCuenta }}
-            </option>
-            <option value="manual">Ingresar una cuenta manualmente</option>
-          </select>
+
+          <Listbox v-model="cuentaTerceroSeleccionada">
+            <div class="relative">
+              <ListboxButton
+                class="relative w-full cursor-default rounded-xl border border-[#b6d6ff] bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus:ring-2 focus:ring-[#01a7e4] sm:text-sm">
+                <span class="block truncate">
+                  {{
+                    cuentasTerceros.find(c => c.noCuenta === cuentaTerceroSeleccionada)?.aliasCuenta
+                      ? cuentasTerceros.find(c => c.noCuenta === cuentaTerceroSeleccionada)?.aliasCuenta + ' / ' +
+                      cuentaTerceroSeleccionada
+                      : cuentaTerceroSeleccionada === 'manual'
+                        ? 'Cuenta manual'
+                        : 'Selecciona una cuenta'
+                  }}
+                </span>
+              </ListboxButton>
+
+              <ListboxOptions
+                class="absolute mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
+                <ListboxOption v-for="c in cuentasTerceros" :key="c.id" :value="c.noCuenta"
+                  class="group flex justify-between items-center cursor-pointer select-none px-4 py-2 hover:bg-[#eef7ff] transition">
+                  <div class="text-[#15385c]">
+                    <p class="font-semibold">{{ c.aliasCuenta }}</p>
+                    <p class="text-xs text-gray-500">No. {{ c.noCuenta }}</p>
+                  </div>
+                  <button type="button" @click.stop="abrirSheetCuenta(c)"
+                    class="text-xs bg-[#ff9800] hover:bg-[#e68900] text-white rounded px-2 py-1 shadow-sm">
+                    Actualizar
+                  </button>
+
+                </ListboxOption>
+
+                <ListboxOption value="manual"
+                  class="cursor-pointer px-4 py-2 text-[#15385c] hover:bg-[#eef7ff] text-sm">
+                  ➕ Ingresar una cuenta manualmente
+                </ListboxOption>
+              </ListboxOptions>
+            </div>
+          </Listbox>
+
           <input v-if="cuentaTerceroSeleccionada === 'manual'" v-model="cuentaTerceroManual" type="text"
             placeholder="Escriba la cuenta destino"
             class="w-full mt-2 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]" />
         </div>
+
+
 
         <!-- Monto -->
         <div>
@@ -124,6 +159,13 @@
       </form>
     </div>
   </div>
+<EditarCuentaTerceroSheet
+  v-model="sheetEditarAbierto"
+  :cuentaEditar="cuentaSeleccionadaEditar"
+  @guardado="cargarCuentasTerceros"
+/>
+
+  <CustomToast ref="toastRef" />
 </template>
 
 
@@ -131,6 +173,9 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import AgregarCuentaTercerosSheet from '@/components/Cuentas/AgregarCuentaTercerosSheet.vue'
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
+import CustomToast from '@/components/Generales/CustomToast.vue'
+import EditarCuentaTerceroSheet from '@/components/Cuentas/EditarCuentaTerceroSheet.vue'
 
 const tipo = ref('propia')
 const cuentaOrigen = ref('')
@@ -145,7 +190,38 @@ const tokenSolicitado = ref(false)
 const solicitando = ref(false)
 const tokenValidado = ref(false)
 const validando = ref(false)
+const toastRef = ref()
+function verDetalles() {
+  alert('Detalles mostrados.')
+}
+function editarCuenta() {
+  alert('Cuenta en modo edición.')
+}
+function toastImplementacion() {
+  alert('Esta función se implementará pronto.')
+}
 
+function showToast(tipo: string, titulo: string, mensaje: string) {
+  toastRef.value?.mostrarToast({
+    tipo,
+    titulo,
+    mensaje
+  })
+}
+
+const sheetEditarAbierto = ref(false)
+const cuentaSeleccionadaEditar = ref<any>(null)
+
+const abrirSheetCuenta = (cuenta: any) => {
+  cuentaSeleccionadaEditar.value = cuenta
+  sheetEditarAbierto.value = true
+}
+
+const actualizarCuentaTerceros = (id: number) => {
+  console.log('Actualizar cuenta con ID:', id)
+  showToast('info', 'Informando', 'esta función se implementará pronto. el id es ' + id)
+
+}
 const solicitarToken = async () => {
   if (!tokenEnvio.value) return alert('Selecciona un canal para enviar el token.')
   const tipoSolicitud = tipo.value === 'propia' ? 'Transferencia propia' : 'Transferencia de terceros'
@@ -200,7 +276,7 @@ const cargarCuentasPropias = async () => {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
     cuentas.value = res.data
-    console.log('Cuentas propias cargadas:', cuentas.value)
+    //console.log('Cuentas propias cargadas:', cuentas.value)
   } catch (error) {
     console.error('Error al cargar cuentas propias:', error)
   }

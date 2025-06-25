@@ -4,40 +4,47 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-    Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
+    Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from '@/components/ui/sheet'
 import axios from 'axios'
-import { useToast } from '@/components/ui/toast/use-toast'
-import { Toaster } from '@/components/ui/toast'
-const { toast } = useToast()
+import CustomToast from '../Generales/CustomToast.vue'
 
 const form = ref({
     numeroCuenta: '',
-    alias: '',         // 👈 nuevo campo
+    alias: '',
     motivo: '',
     canalEnvio: '',
     token: '',
 })
 
-// Estados de UI
+const toastRef = ref()
+
 const cuentaVerificada = ref(false)
 const datosCuenta = ref<any>(null)
-const esperandoToken = ref(false)
 const tokenSolicitado = ref(false)
 const loadingVerifica = ref(false)
 const loadingToken = ref(false)
 const loadingAgregar = ref(false)
 const errorMsg = ref('')
+
 const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`
 })
+
+function showToast(tipo: string, titulo: string, mensaje: string) {
+    toastRef.value?.mostrarToast({
+        tipo,
+        titulo,
+        mensaje
+    })
+}
+
 async function verificarCuenta() {
     errorMsg.value = ''
     loadingVerifica.value = true
     datosCuenta.value = null
     cuentaVerificada.value = false
     try {
-        // Tu endpoint real (ajusta la URL base si lo necesitas)
         const { data } = await axios.get(
             'https://interappapi.onrender.com/api/cuentas/buscar-cuenta',
             {
@@ -45,7 +52,6 @@ async function verificarCuenta() {
                 params: { numCuenta: form.value.numeroCuenta }
             }
         )
-        // data = CuentaDto
         datosCuenta.value = {
             nombre: data.nombreCuenta,
             tipo: data.tipoCuentaNombre,
@@ -61,58 +67,40 @@ async function verificarCuenta() {
     }
 }
 
-
 async function solicitarToken() {
-
     errorMsg.value = ''
     if (!form.value.canalEnvio) {
         errorMsg.value = 'Selecciona un canal para recibir el token.'
         return
     }
     if (form.value.canalEnvio == "SMS") {
-        toast({
-            title: '¡Atencion!',
-            description: 'Esto esta aun en implementacion.',
-            variant: 'destructive',
-        })
-        //alert('El envío de token por SMS se implementará pronto.')
+        showToast('error', '¡Atención!', 'Esto aún está en implementación.')
         return
-    } else {
-        loadingToken.value = true
-
-        try {
-            // El backend toma userId del JWT, así que solo mandamos estos dos campos
-            const response = await axios.post('https://interappapi.onrender.com/api/cuentas/solicitar-codigo-validacion', {
-                tipoSolicitud: 'AgregarCuentaTercero',             // Puedes parametrizarlo si gustas
-                enviadoPor: form.value.canalEnvio           // Debe ser 'email' o 'sms' según opción
-            }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            })
-
-            toast({
-                title: '¡Éxito!',
-                description: response.data.message || 'El código fue enviado a su correo.',
-                variant: 'success'
-            })
-            tokenSolicitado.value = true
-        } catch (e) {
-            errorMsg.value = 'No se pudo enviar el token. Intente nuevamente.'
-        } finally {
-            loadingToken.value = false
-        }
     }
 
+    loadingToken.value = true
+
+    try {
+        const response = await axios.post('https://interappapi.onrender.com/api/cuentas/solicitar-codigo-validacion', {
+            tipoSolicitud: 'AgregarCuentaTercero',
+            enviadoPor: form.value.canalEnvio
+        }, {
+            headers: getAuthHeaders()
+        })
+
+        showToast('success', '✅ Éxito', response.data.message || 'El código fue enviado a su correo.')
+        tokenSolicitado.value = true
+    } catch (e) {
+        showToast('error', '❌ Error', 'No se pudo enviar el token.')
+    } finally {
+        loadingToken.value = false
+    }
 }
 
 async function agregarCuenta() {
     errorMsg.value = ''
 
-    if (!form.value.token) {
-        errorMsg.value = 'Ingresa el token recibido.'
-        return
-    }
-
-    if (!form.value.numeroCuenta || !form.value.alias || !form.value.motivo ) {
+    if (!form.value.token || !form.value.numeroCuenta || !form.value.alias || !form.value.motivo) {
         errorMsg.value = 'Completa todos los campos requeridos.'
         return
     }
@@ -127,7 +115,6 @@ async function agregarCuenta() {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             },
             body: JSON.stringify({
-                
                 noCuenta: form.value.numeroCuenta,
                 aliasCuenta: form.value.alias,
                 razonAgregada: form.value.motivo,
@@ -138,20 +125,23 @@ async function agregarCuenta() {
         const data = await response.json()
 
         if (!response.ok) {
-            throw new Error(data.mensaje || 'Error al agregar cuenta.')
+            showToast('error', '❌ Error', data.mensaje || 'Error al agregar cuenta.')
+            return
         }
 
-        alert('✅ ' + data.mensaje)
-        // puedes limpiar el formulario si deseas
+        showToast('success', '✅ Éxito', data.mensaje || 'Cuenta agregada correctamente.')
 
+        form.value = { numeroCuenta: '', alias: '', motivo: '', canalEnvio: '', token: '' }
+        cuentaVerificada.value = false
+        tokenSolicitado.value = false
+        datosCuenta.value = null
 
     } catch (err) {
-        errorMsg.value = err.message
+        showToast('error', '❌ Error', err.message)
     } finally {
         loadingAgregar.value = false
     }
 }
-
 
 const canales = [
     { value: 'correo', label: 'Correo electrónico' },
@@ -159,8 +149,10 @@ const canales = [
 ]
 </script>
 
+
 <template>
-    <Toaster />
+    <CustomToast ref="toastRef"/>
+
     <Sheet>
         <SheetTrigger as-child>
             <button type="button"
@@ -168,7 +160,7 @@ const canales = [
                 <span class="text-base">＋</span> Agregar cuenta
             </button>
         </SheetTrigger>
-        <SheetContent>
+        <SheetContent aria-describedby="">
             <SheetHeader>
                 <SheetTitle>Añadir cuenta de terceros</SheetTitle>
             </SheetHeader>
