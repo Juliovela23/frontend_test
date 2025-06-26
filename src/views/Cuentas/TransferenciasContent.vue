@@ -3,7 +3,8 @@
     <div
       class="bg-[#e7eef6] rounded-2xl p-8 shadow-xl w-full max-w-xl min-w-[320px] sm:max-w-2xl flex flex-col items-center">
       <h2 class="text-xl sm:text-2xl font-bold text-[#15385c] mb-4 text-center">Realizar una transferencia</h2>
-      <form class="w-full flex flex-col gap-4">
+      <form @submit.prevent="realizarTransferencia" class="w-full flex flex-col gap-4">
+
         <!-- Tipo -->
         <div>
           <span class="font-semibold text-[#15385c]">Tipo de transferencia</span>
@@ -25,13 +26,16 @@
               Fondos disponibles: Q {{ saldoDisponible.toFixed(2) }}
             </span>
           </div>
-          <select class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
-            v-model="cuentaOrigen">
+          <select v-model="cuentaSeleccionada" class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
+            >
             <option value="">Selecciona una cuenta</option>
-            <option v-for="c in cuentas" :key="c.id" :value="c.id">
+            <option v-for="c in cuentas" :key="c.id" :value="c">
               {{ c.nombreCuenta }} - {{ c.tipoCuentaNombre }} - {{ c.noCuenta }}
             </option>
           </select>
+
+          <!-- Campo oculto que guarda solo el número de cuenta -->
+          <input type="hidden" v-model="cuentaOrigen" />
         </div>
 
         <!-- Cuenta destino -->
@@ -150,27 +154,26 @@
           </div>
 
           <!-- Botón transferencia -->
-          <button type="submit" :disabled="!tokenValidado"
+          <button type="submit" :disabled="!tokenValidado || cargandoTransferencia"
             class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow transition text-lg flex items-center justify-center gap-2 mt-4">
-            Realizar transferencia
+            <span v-if="cargandoTransferencia"
+              class="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></span>
+            <span v-else>Realizar transferencia</span>
           </button>
         </div>
 
       </form>
     </div>
   </div>
-<EditarCuentaTerceroSheet
-  v-model="sheetEditarAbierto"
-  :cuentaEditar="cuentaSeleccionadaEditar"
-  @guardado="cargarCuentasTerceros"
-/>
+  <EditarCuentaTerceroSheet v-model="sheetEditarAbierto" :cuentaEditar="cuentaSeleccionadaEditar"
+    @guardado="cargarCuentasTerceros" />
 
   <CustomToast ref="toastRef" />
 </template>
 
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import AgregarCuentaTercerosSheet from '@/components/Cuentas/AgregarCuentaTercerosSheet.vue'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
@@ -191,6 +194,15 @@ const solicitando = ref(false)
 const tokenValidado = ref(false)
 const validando = ref(false)
 const toastRef = ref()
+const cargandoTransferencia = ref(false)
+const validacionId = ref(null)
+const cuentaSeleccionada = ref(null)
+//const cuentaOrigen = ref('')
+
+watch(cuentaSeleccionada, (nuevaCuenta) => {
+  cuentaOrigen.value = nuevaCuenta?.noCuenta ?? ''
+})
+
 function verDetalles() {
   alert('Detalles mostrados.')
 }
@@ -248,7 +260,7 @@ const validarToken = async () => {
   if (!token.value) return alert('Ingrese el token.')
   validando.value = true
   try {
-    await axios.post('https://interappapi.onrender.com/api/auth/verificar-codigo-reciclable', {
+    const res = await axios.post('https://interappapi.onrender.com/api/auth/verificar-codigo-reciclable', {
       codigo: token.value,
       tipoSolicitud: tipo.value === 'propia' ? 'Transferencia propia' : 'Transferencia de terceros'
     }, {
@@ -256,6 +268,8 @@ const validarToken = async () => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
+    console.log('Token validado:', res.data.idValidacion)
+    validacionId.value = res.data.idValidacion
     tokenValidado.value = true
     alert('Token verificado correctamente.')
   } catch (err) {
@@ -306,4 +320,68 @@ const saldoDisponible = computed(() => {
 const cuentaTercero = computed(() =>
   cuentaTerceroSeleccionada.value === 'manual' ? cuentaTerceroManual.value : cuentaTerceroSeleccionada.value
 )
+
+//transferencia
+const realizarTransferencia = async () => {
+  if (!cuentaOrigen.value) {
+    return showToast('error', 'Validación', 'Selecciona una cuenta de origen.')
+  }
+
+  const destino = tipo.value === 'propia' ? cuentaDestino.value : cuentaTercero.value
+
+  if (!destino) {
+    return showToast('error', 'Validación', 'Selecciona o ingresa una cuenta destino.')
+  }
+
+  if (!monto.value || parseFloat(monto.value) <= 0) {
+    return showToast('error', 'Validación', 'Ingresa un monto válido.')
+  }
+
+  if (!tokenValidado.value) {
+    return showToast('error', 'Validación', 'Debes validar el token antes de continuar.')
+  }
+  if (!validacionId.value) {
+    return showToast('error', 'Validación', 'No se pudo obtener el ID de validación del token.')
+  }
+  console.log(validacionId?.value)
+  cargandoTransferencia.value = true
+  try {
+    const payload = {
+      tipoTransferencia: tipo.value,
+      cuentaOrigen: parseInt(cuentaOrigen.value),
+      cuentaDestino: destino,
+      monto: parseFloat(monto.value),
+      descripcionTransferencia: descripcion.value,
+      idValidacion: validacionId.value
+    }
+
+    const res = await axios.post('https://interappapi.onrender.com/api/transferencias/realizar', payload, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+
+    showToast('success', 'Éxito', res.data.message || 'Transferencia realizada con éxito.')
+
+    // Limpiar formulario
+    cuentaOrigen.value = ''
+    cuentaDestino.value = ''
+    cuentaTerceroSeleccionada.value = ''
+    cuentaTerceroManual.value = ''
+    monto.value = ''
+    descripcion.value = ''
+    token.value = ''
+    tokenValidado.value = false
+    tokenSolicitado.value = false
+
+  } catch (error: any) {
+    const mensaje = error?.response?.data?.message || 'Ocurrió un error al procesar la transferencia.'
+    showToast('error', 'Error', mensaje)
+    console.error(error)
+  } finally {
+    cargandoTransferencia.value = false
+  }
+}
+
+
 </script>

@@ -85,7 +85,7 @@ const data = {
         },
         {
           title: "Historial de transferencias",
-          url: "#",
+          url: "/dashboard/historial-transferencias",
         },{
           title: "Transferencias programadas",
           url: "/dashboard/transferencias-programadas",
