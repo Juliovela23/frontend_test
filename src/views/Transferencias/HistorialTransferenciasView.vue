@@ -1,9 +1,16 @@
 <template>
   <div class="p-6">
     <h1 class="text-xl font-semibold mb-4 text-[#15385c]">Historial de Transferencias</h1>
-
-    <div class="mb-4 flex gap-4 items-center">
+    <div class="mb-4 flex gap-4 items-center flex-wrap">
       <Input v-model="filtroBusqueda" placeholder="Buscar por número o descripción" class="max-w-sm" />
+
+      <select v-model="cuentaSeleccionada" class="p-2 rounded-lg border border-gray-300 text-sm text-[#15385c]">
+        <option value="">Todas las cuentas</option>
+        <option v-for="cuenta in cuentas" :key="cuenta.id" :value="cuenta.id">
+          {{ cuenta.noCuenta }} - {{ cuenta.nombreCuenta }}
+        </option>
+      </select>
+
       <Button @click="cargarTransferencias">Buscar</Button>
     </div>
 
@@ -43,16 +50,24 @@ const transferencias = ref([])
 const filtroBusqueda = ref('')
 const loading = ref(false)
 const router = useRouter()
+const cuentas = ref([])
+const cuentaSeleccionada = ref('')
 
 const cargarTransferencias = async () => {
   loading.value = true
   try {
+    const params = {}
+    if (cuentaSeleccionada.value) {
+      params.cuentaId = cuentaSeleccionada.value
+    }
+
     const response = await axios.get('https://interappapi.onrender.com/api/transferencias/mis-transferencias', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
+      },
+      params
     })
-    console.log('Transferencias cargadas:', response.data)
+
     transferencias.value = response.data.filter(t =>
       t.noTransferencia.includes(filtroBusqueda.value) ||
       (t.descripcion ?? '').toLowerCase().includes(filtroBusqueda.value.toLowerCase())
@@ -64,6 +79,22 @@ const cargarTransferencias = async () => {
   }
 }
 
+onMounted(async () => {
+  try {
+    const res = await axios.get('https://interappapi.onrender.com/api/cuentas/mis-cuentas', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    cuentas.value = res.data
+  } catch (err) {
+    console.error('Error al cargar cuentas:', err)
+    alert('No se pudieron cargar las cuentas del usuario.')
+  }
+
+  await cargarTransferencias()
+})
+
 const formatDate = (fecha) => new Date(fecha).toLocaleString('es-GT', { dateStyle: 'short', timeStyle: 'short' })
 
 const verRecibo = (id) => {
@@ -73,5 +104,4 @@ const verRecibo = (id) => {
 onMounted(cargarTransferencias)
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
