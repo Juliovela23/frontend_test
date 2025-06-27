@@ -26,8 +26,8 @@
               Fondos disponibles: Q {{ saldoDisponible.toFixed(2) }}
             </span>
           </div>
-          <select v-model="cuentaSeleccionada" class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]"
-            >
+          <select v-model="cuentaSeleccionada"
+            class="w-full mt-1 p-2 rounded-xl border border-[#b6d6ff] bg-white focus:ring-2 focus:ring-[#01a7e4]">
             <option value="">Selecciona una cuenta</option>
             <option v-for="c in cuentas" :key="c.id" :value="c">
               {{ c.nombreCuenta }} - {{ c.tipoCuentaNombre }} - {{ c.noCuenta }}
@@ -54,7 +54,7 @@
         <div v-else>
           <div class="flex items-center gap-2 mb-1">
             <label class="font-semibold text-[#15385c] mb-0">Cuenta destino (Tercero)</label>
-            <AgregarCuentaTercerosSheet />
+            <AgregarCuentaTercerosSheet @cuenta-agregada="agregarCuentaPendienteYSeleccionar" />
           </div>
 
           <Listbox v-model="cuentaTerceroSeleccionada">
@@ -75,18 +75,21 @@
 
               <ListboxOptions
                 class="absolute mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
-                <ListboxOption v-for="c in cuentasTerceros" :key="c.id" :value="c.noCuenta"
+                <ListboxOption v-for="c in cuentasDisponiblesTerceros" :key="c.id" :value="c.noCuenta"
                   class="group flex justify-between items-center cursor-pointer select-none px-4 py-2 hover:bg-[#eef7ff] transition">
                   <div class="text-[#15385c]">
                     <p class="font-semibold">{{ c.aliasCuenta }}</p>
                     <p class="text-xs text-gray-500">No. {{ c.noCuenta }}</p>
                   </div>
-                  <button type="button" @click.stop="abrirSheetCuenta(c)"
+                  <button v-if="!c.id?.toString().startsWith('temp')" type="button" @click.stop="abrirSheetCuenta(c)"
                     class="text-xs bg-[#ff9800] hover:bg-[#e68900] text-white rounded px-2 py-1 shadow-sm">
                     Actualizar
                   </button>
-
+                  <span v-else class="text-xs bg-yellow-500 text-white rounded px-2 py-1 shadow-sm cursor-default">
+                    Pendiente
+                  </span>
                 </ListboxOption>
+
 
                 <ListboxOption value="manual"
                   class="cursor-pointer px-4 py-2 text-[#15385c] hover:bg-[#eef7ff] text-sm">
@@ -179,12 +182,14 @@ import AgregarCuentaTercerosSheet from '@/components/Cuentas/AgregarCuentaTercer
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import CustomToast from '@/components/Generales/CustomToast.vue'
 import EditarCuentaTerceroSheet from '@/components/Cuentas/EditarCuentaTerceroSheet.vue'
+import { useRouter } from 'vue-router'
 
 const tipo = ref('propia')
 const cuentaOrigen = ref('')
 const cuentaDestino = ref('')
 const cuentaTerceroSeleccionada = ref('')
 const cuentaTerceroManual = ref('')
+const cuentasPendientes = ref<any[]>([])
 const monto = ref('')
 const descripcion = ref('')
 const tokenEnvio = ref('')
@@ -197,28 +202,24 @@ const toastRef = ref()
 const cargandoTransferencia = ref(false)
 const validacionId = ref(null)
 const cuentaSeleccionada = ref(null)
-//const cuentaOrigen = ref('')
+const router = useRouter()
 
 watch(cuentaSeleccionada, (nuevaCuenta) => {
-  cuentaOrigen.value = nuevaCuenta?.noCuenta ?? ''
+  cuentaOrigen.value = nuevaCuenta?.noCuenta?.toString() ?? ''
 })
 
-function verDetalles() {
-  alert('Detalles mostrados.')
+const showToast = (tipo: string, titulo: string, mensaje: string) => {
+  toastRef.value?.mostrarToast({ tipo, titulo, mensaje })
 }
-function editarCuenta() {
-  alert('Cuenta en modo edición.')
-}
-function toastImplementacion() {
-  alert('Esta función se implementará pronto.')
-}
+function agregarCuentaPendienteYSeleccionar(cuenta: any) {
+  if (!cuentasPendientes.value.some(c => c.noCuenta === cuenta.noCuenta)) {
+    cuentasPendientes.value.push({
+      id: 'pendiente-' + Date.now(),
+      ...cuenta
+    })
+  }
 
-function showToast(tipo: string, titulo: string, mensaje: string) {
-  toastRef.value?.mostrarToast({
-    tipo,
-    titulo,
-    mensaje
-  })
+  cuentaTerceroSeleccionada.value = cuenta.noCuenta
 }
 
 const sheetEditarAbierto = ref(false)
@@ -229,11 +230,6 @@ const abrirSheetCuenta = (cuenta: any) => {
   sheetEditarAbierto.value = true
 }
 
-const actualizarCuentaTerceros = (id: number) => {
-  console.log('Actualizar cuenta con ID:', id)
-  showToast('info', 'Informando', 'esta función se implementará pronto. el id es ' + id)
-
-}
 const solicitarToken = async () => {
   if (!tokenEnvio.value) return alert('Selecciona un canal para enviar el token.')
   const tipoSolicitud = tipo.value === 'propia' ? 'Transferencia propia' : 'Transferencia de terceros'
@@ -243,9 +239,7 @@ const solicitarToken = async () => {
       tipoSolicitud,
       enviadoPor: tokenEnvio.value
     }, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
     tokenSolicitado.value = true
   } catch (err) {
@@ -264,11 +258,8 @@ const validarToken = async () => {
       codigo: token.value,
       tipoSolicitud: tipo.value === 'propia' ? 'Transferencia propia' : 'Transferencia de terceros'
     }, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
-    console.log('Token validado:', res.data.idValidacion)
     validacionId.value = res.data.idValidacion
     tokenValidado.value = true
     alert('Token verificado correctamente.')
@@ -290,7 +281,6 @@ const cargarCuentasPropias = async () => {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
     cuentas.value = res.data
-    //console.log('Cuentas propias cargadas:', cuentas.value)
   } catch (error) {
     console.error('Error al cargar cuentas propias:', error)
   }
@@ -310,10 +300,16 @@ const cargarCuentasTerceros = async () => {
 onMounted(() => {
   cargarCuentasPropias()
   cargarCuentasTerceros()
+  const pendiente = localStorage.getItem('cuentaPendienteTercero')
+  if (pendiente) {
+    const parsed = JSON.parse(pendiente)
+    cuentasPendientes.value.push(parsed)
+    cuentaTerceroSeleccionada.value = parsed.noCuenta
+  }
 })
 
 const saldoDisponible = computed(() => {
-  const cuenta = cuentas.value.find(c => c.id === cuentaOrigen.value)
+  const cuenta = cuentas.value.find(c => c.noCuenta === cuentaOrigen.value)
   return cuenta?.saldoCuenta ?? 0
 })
 
@@ -321,49 +317,74 @@ const cuentaTercero = computed(() =>
   cuentaTerceroSeleccionada.value === 'manual' ? cuentaTerceroManual.value : cuentaTerceroSeleccionada.value
 )
 
-//transferencia
-const realizarTransferencia = async () => {
-  if (!cuentaOrigen.value) {
-    return showToast('error', 'Validación', 'Selecciona una cuenta de origen.')
+const cuentasDisponiblesTerceros = computed(() => {
+  const pendientesFiltradas = cuentasPendientes.value.filter(p =>
+    !cuentasTerceros.value.some(t => t.noCuenta === p.noCuenta)
+  )
+  return [...cuentasTerceros.value, ...pendientesFiltradas]
+})
+watch([cuentaTerceroSeleccionada, cuentaTerceroManual], () => {
+  if (
+    cuentaTerceroSeleccionada.value === 'manual' &&
+    cuentaTerceroManual.value &&
+    !cuentasPendientes.value.some(c => c.noCuenta === cuentaTerceroManual.value)
+  ) {
+    cuentasPendientes.value.push({
+      id: 'pendiente-' + Date.now(),
+      noCuenta: cuentaTerceroManual.value,
+      aliasCuenta: 'Cuenta temporal'
+    })
   }
-
+})
+const realizarTransferencia = async () => {
+  if (!cuentaOrigen.value) return showToast('error', 'Validación', 'Selecciona una cuenta de origen.')
   const destino = tipo.value === 'propia' ? cuentaDestino.value : cuentaTercero.value
+  if (!destino) return showToast('error', 'Validación', 'Selecciona o ingresa una cuenta destino.')
 
-  if (!destino) {
-    return showToast('error', 'Validación', 'Selecciona o ingresa una cuenta destino.')
+  if (tipo.value === 'propia' && cuentaOrigen.value === cuentaDestino.value) {
+    return showToast('error', 'Validación', 'La cuenta de origen y destino no pueden ser la misma.')
   }
 
   if (!monto.value || parseFloat(monto.value) <= 0) {
     return showToast('error', 'Validación', 'Ingresa un monto válido.')
   }
 
-  if (!tokenValidado.value) {
-    return showToast('error', 'Validación', 'Debes validar el token antes de continuar.')
+  if (parseFloat(monto.value) > saldoDisponible.value) {
+    return showToast('error', 'Validación', 'El monto excede el saldo disponible.')
   }
-  if (!validacionId.value) {
-    return showToast('error', 'Validación', 'No se pudo obtener el ID de validación del token.')
-  }
-  console.log(validacionId?.value)
+
+  if (!tokenValidado.value) return showToast('error', 'Validación', 'Debes validar el token antes de continuar.')
+  if (!validacionId.value) return showToast('error', 'Validación', 'No se obtuvo ID de validación del token.')
+
   cargandoTransferencia.value = true
   try {
+    if (tipo.value === 'terceros') {
+      cuentasPendientes.value = cuentasPendientes.value.filter(
+        c => c.noCuenta !== cuentaTercero.value
+      )
+    }
     const payload = {
       tipoTransferencia: tipo.value,
-      cuentaOrigen: parseInt(cuentaOrigen.value),
+      cuentaOrigen: cuentaOrigen.value,
       cuentaDestino: destino,
       monto: parseFloat(monto.value),
       descripcionTransferencia: descripcion.value,
       idValidacion: validacionId.value
     }
-
     const res = await axios.post('https://interappapi.onrender.com/api/transferencias/realizar', payload, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
-
     showToast('success', 'Éxito', res.data.message || 'Transferencia realizada con éxito.')
+    const idTransferencia = res.data.transferenciaId
+    router.push(`/dashboard/transferencia-recibo/${idTransferencia}`)
+    if (tipo.value === 'terceros' && cuentaTerceroSeleccionada.value === 'manual' && cuentaTerceroManual.value) {
+      cuentasPendientes.value.push({
+        id: 'temp-' + Date.now(),
+        aliasCuenta: 'Pendiente aprobación',
+        noCuenta: cuentaTerceroManual.value
+      })
+    }
 
-    // Limpiar formulario
     cuentaOrigen.value = ''
     cuentaDestino.value = ''
     cuentaTerceroSeleccionada.value = ''
@@ -373,7 +394,11 @@ const realizarTransferencia = async () => {
     token.value = ''
     tokenValidado.value = false
     tokenSolicitado.value = false
-
+    cuentasPendientes.value = cuentasPendientes.value.filter(
+      c => c.noCuenta !== cuentaTercero.value
+    )
+    localStorage.removeItem('cuentaPendienteTercero')
+    cuentasPendientes.value = cuentasPendientes.value.filter(c => c.noCuenta !== destino)
   } catch (error: any) {
     const mensaje = error?.response?.data?.message || 'Ocurrió un error al procesar la transferencia.'
     showToast('error', 'Error', mensaje)
@@ -382,6 +407,4 @@ const realizarTransferencia = async () => {
     cargandoTransferencia.value = false
   }
 }
-
-
 </script>

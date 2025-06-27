@@ -1,53 +1,83 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 flex items-center justify-center p-4">
-    <div class="w-full max-w-xl rounded-2xl shadow-xl bg-white/80 backdrop-blur-lg p-8 space-y-6 border border-gray-200">
-      <div class="text-center">
-        <h1 class="text-2xl font-bold text-[#002C5F]">Comprobante de Transferencia</h1>
-        <p class="text-sm text-gray-500">Detalle completo de tu transacción</p>
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg border relative p-6">
+      <!-- Toggle -->
+      <!-- Mostrar switch solo si ya cargó transferencia -->
+      <div v-if="transferencia" class="flex items-center gap-2 justify-end">
+        <label class="switch">
+          <input type="checkbox" v-model="mostrarDatos" />
+          <span class="slider"></span>
+        </label>
+        <span class="text-sm text-gray-700 font-medium">Ver datos personales</span>
       </div>
 
-      <div v-if="transferencia" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <p class="text-sm text-gray-500">Número de transferencia</p>
-            <p class="font-semibold text-[#15385c]">{{ transferencia.noTransferencia }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">Fecha y hora</p>
-            <p class="font-semibold">{{ new Date(transferencia.fecha).toLocaleString() }}</p>
-          </div>
+      <!-- Encabezado -->
+      <div class="text-center border-b pb-3">
+        <h1 class="text-xl font-bold text-[#005531]">Comprobante de transferencia</h1>
+        <p class="text-xs text-gray-500">Transferencia realizada exitosamente</p>
+      </div>
 
-          <div>
-            <p class="text-sm text-gray-500">Desde</p>
-            <p class="font-medium">***{{ transferencia.cuentaOrigen?.slice(-4) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">Hacia</p>
-            <p class="font-medium">***{{ transferencia.cuentaDestino?.slice(-4) }}</p>
-          </div>
-
-          <div class="col-span-2">
-            <p class="text-sm text-gray-500">Descripción</p>
-            <p class="text-gray-700">{{ transferencia.descripcionTransferencia || 'Sin descripción' }}</p>
-          </div>
-
-          <div class="col-span-2 text-center py-4">
-            <p class="text-2xl font-bold text-green-700">Q{{ transferencia.monto.toFixed(2) }}</p>
-            <p class="text-sm text-gray-500">Monto transferido</p>
-          </div>
+      <div v-if="transferencia" class="mt-4 space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-500">N° de referencia:</span>
+          <span class="font-medium text-[#15385c]">{{ transferencia.noTransferencia }}</span>
         </div>
 
-        <div class="border-t pt-4 text-sm text-center text-gray-400">
-          <p>InterApp™ | Transacción segura</p>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Fecha y hora:</span>
+          <span class="text-gray-800">{{ new Date(transferencia.fecha).toLocaleString() }}</span>
+        </div>
+
+        <!-- Cuenta de débito -->
+        <div>
+          <p class="text-gray-500 text-sm">Cuenta de débito:</p>
+          <p class="text-gray-800 text-right text-sm">
+            {{ mostrarDatos
+              ? transferencia.nombreUsuarioOrigen + " / " + transferencia.tipo_cuentaOrigen + " / " +
+              transferencia.cuentaOrigen
+              : '***' + transferencia.cuentaOrigen?.slice(-4) }}
+          </p>
+        </div>
+
+        <!-- Cuenta a acreditar -->
+        <div>
+          <p class="text-gray-500 text-sm">Cuenta a acreditar:</p>
+          <p class="text-gray-800 text-right text-sm">
+            {{ mostrarDatos
+              ? transferencia.nombreUsuarioDestino + " / " + transferencia.tipo_cuentaDestino + " / " +
+              transferencia.cuentaDestino
+              : '***' + transferencia.cuentaDestino?.slice(-4) }}
+          </p>
+        </div>
+
+
+        <div class="flex justify-between">
+          <span class="text-gray-500">Monto debitado:</span>
+          <span class="font-semibold text-red-600">-Q{{ transferencia.monto.toFixed(2) }}</span>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-500">Monto acreditado:</span>
+          <span class="font-semibold text-green-600">Q{{ transferencia.monto.toFixed(2) }}</span>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-500">Descripción:</span>
+          <span class="text-gray-800">{{ transferencia.descripcion || 'Sin descripción' }}</span>
         </div>
       </div>
 
-      <div v-else class="text-center text-gray-500">
-        <p>Cargando información de la transferencia...</p>
+      <div v-else class="text-center text-gray-500 mt-6">Cargando transferencia...</div>
+
+      <!-- Footer -->
+      <div class="border-t mt-6 pt-2 text-xs text-center text-gray-400">
+        <p>InterApp™ | Transacción segura</p>
+        <p v-if="mostrarDatos"></p>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
@@ -56,8 +86,10 @@ import axios from 'axios'
 
 const route = useRoute()
 const transferenciaId = route.params.id as string
+
 const transferencia = ref<any>(null)
-console.log('Transferencia ID:', transferenciaId)
+const mostrarDatos = ref(false) // ✅ <-- esta es la variable faltante
+
 onMounted(async () => {
   try {
     const res = await axios.get(`https://interappapi.onrender.com/api/transferencias/recibo/${transferenciaId}`, {
@@ -65,14 +97,53 @@ onMounted(async () => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
-    
-    console.log('Datos de transferencia recibidos:', res.data)
-    
     transferencia.value = res.data
   } catch (err) {
     console.error('Error al obtener transferencia:', err)
   }
 })
-
-
 </script>
+<style scoped>
+.switch {
+  font-size: 14px;
+  position: relative;
+  display: inline-block;
+  width: 2.6em;
+  height: 1.4em;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #9fccfa;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1.4em;
+  width: 1.4em;
+  inset: 0;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.switch input:checked+.slider {
+  background: #0974f1;
+}
+
+.switch input:checked+.slider:before {
+  transform: translateX(1.2em);
+}
+</style>

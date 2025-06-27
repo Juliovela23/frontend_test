@@ -18,6 +18,7 @@ const form = ref({
 })
 
 const toastRef = ref()
+const emit = defineEmits(['cuenta-agregada'])
 
 const cuentaVerificada = ref(false)
 const datosCuenta = ref<any>(null)
@@ -58,6 +59,15 @@ async function verificarCuenta() {
             numero: data.noCuenta
         }
         cuentaVerificada.value = true
+        localStorage.setItem('cuentaPendienteTercero', JSON.stringify({
+            noCuenta: data.noCuenta,
+            aliasCuenta: data.nombreCuenta || 'Cuenta temporal'
+        }))
+        emit('cuenta-agregada', {
+            noCuenta: form.value.numeroCuenta,
+            aliasCuenta: form.value.alias || datosCuenta.value.nombre || 'Cuenta temporal'
+        })
+
     } catch (e) {
         errorMsg.value = e.response?.status === 404
             ? 'No se encontró la cuenta, revisa el número e inténtalo de nuevo.'
@@ -151,7 +161,7 @@ const canales = [
 
 
 <template>
-    <CustomToast ref="toastRef"/>
+    <CustomToast ref="toastRef" />
 
     <Sheet>
         <SheetTrigger as-child>
