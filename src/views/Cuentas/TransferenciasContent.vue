@@ -183,7 +183,8 @@ import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headless
 import CustomToast from '@/components/Generales/CustomToast.vue'
 import EditarCuentaTerceroSheet from '@/components/Cuentas/EditarCuentaTerceroSheet.vue'
 import { useRouter } from 'vue-router'
-
+import { useRoute } from 'vue-router'
+const route = useRoute()
 const tipo = ref('propia')
 const cuentaOrigen = ref('')
 const cuentaDestino = ref('')
@@ -306,6 +307,14 @@ onMounted(() => {
     cuentasPendientes.value.push(parsed)
     cuentaTerceroSeleccionada.value = parsed.noCuenta
   }
+  watch(cuentas, () => {
+    if (route.query.cuentaId && cuentas.value.length) {
+      const encontrada = cuentas.value.find(c => c.id == route.query.cuentaId)
+      if (encontrada) {
+        cuentaSeleccionada.value = encontrada
+      }
+    }
+  })
 })
 
 const saldoDisponible = computed(() => {

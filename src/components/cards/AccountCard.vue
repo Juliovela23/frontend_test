@@ -51,13 +51,13 @@
 <script setup>
 import { ref, reactive, watch } from 'vue'
 import gsap from 'gsap'
-
+import { useRouter } from 'vue-router'
 const props = defineProps({
   card: Object,
   account: Object,
   colorFondo: String
 })
-
+const router = useRouter()
 const number = ref(0)
 const tweened = reactive({
   number: 0
@@ -65,7 +65,23 @@ const tweened = reactive({
 watch(number, (n) => {
   gsap.to(tweened, { duration: 0.5, number: Number(n) || 0 })
 })
+function handleTransferencia() {
+  if (props.account?.id) {
+    router.push({
+      name: 'DashboardTransferencias', // 👈 Usa el name de tu ruta hija
+      query: { cuentaId: props.account.id }
+    })
+  }
+}
 
+function handleHistorial() {
+  if (props.account?.id) {
+    router.push({
+      name: 'DashboardEstadoCuenta', // 👈 Usa el name de tu ruta hija
+      query: { cuentaId: props.account.id }
+    })
+  }
+}
 
 const oculto = ref(true)
 
@@ -124,16 +140,6 @@ function handleOcultarSaldo() {
 }
 
 
-function handleTransferencia() {
-  if (props.card?.id) {
-    console.log('Transferencia desde ID:', props.card.id)
-  }
-}
 
-function handleHistorial() {
-  if (props.card?.id) {
-    console.log('Historial para ID:', props.card.id)
-  }
-}
 
 </script>
