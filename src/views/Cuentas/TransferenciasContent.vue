@@ -184,6 +184,7 @@ import CustomToast from '@/components/Generales/CustomToast.vue'
 import EditarCuentaTerceroSheet from '@/components/Cuentas/EditarCuentaTerceroSheet.vue'
 import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
+import Swal from 'sweetalert2'
 const route = useRoute()
 const tipo = ref('propia')
 const cuentaOrigen = ref('')
@@ -242,9 +243,19 @@ const solicitarToken = async () => {
     }, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
+    Swal.fire({
+      icon: 'success',
+      title: 'Token solicitado',
+      text: `El token ha sido enviado por ${tokenEnvio.value}.`
+    })
     tokenSolicitado.value = true
   } catch (err) {
-    alert('Error al solicitar el token.')
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al solicitar el token',
+      text: err.response?.data?.message || 'Ocurrió un error al enviar el token.'
+    })
+  
     console.error(err)
   } finally {
     solicitando.value = false
@@ -263,10 +274,20 @@ const validarToken = async () => {
     })
     validacionId.value = res.data.idValidacion
     tokenValidado.value = true
-    alert('Token verificado correctamente.')
+    Swal.fire({
+      icon: 'success',
+      title: 'Token verificado',
+      text: 'El token ha sido verificado correctamente.'
+    })
+   
   } catch (err) {
     tokenValidado.value = false
-    alert('Token inválido o expirado.')
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de validación',
+      text: err.response?.data?.message || 'Token inválido o expirado.'
+    })
+  
     console.error(err)
   } finally {
     validando.value = false
@@ -283,7 +304,13 @@ const cargarCuentasPropias = async () => {
     })
     cuentas.value = res.data
   } catch (error) {
-    console.error('Error al cargar cuentas propias:', error)
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al cargar cuentas',
+      text: error.response?.data?.message || 'Ocurrió un error al cargar las cuentas.'
+    })
+    //console.error('Error al cargar cuentas propias:', error)
+    
   }
 }
 
@@ -294,6 +321,11 @@ const cargarCuentasTerceros = async () => {
     })
     cuentasTerceros.value = res.data
   } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al cargar cuentas de terceros',
+      text: error.response?.data?.message || 'Ocurrió un error al cargar las cuentas.'
+    })
     console.error('Error al cargar cuentas de terceros:', error)
   }
 }
@@ -383,7 +415,12 @@ const realizarTransferencia = async () => {
     const res = await axios.post('https://interappapi.onrender.com/api/transferencias/realizar', payload, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
-    showToast('success', 'Éxito', res.data.message || 'Transferencia realizada con éxito.')
+    //showToast('success', 'Éxito', res.data.message || 'Transferencia realizada con éxito.')
+    Swal.fire({
+      icon: 'success',
+      title: 'Transferencia exitosa',
+      text: res.data.message || 'La transferencia se realizó correctamente.'
+    })
     const idTransferencia = res.data.transferenciaId
     router.push(`/dashboard/transferencia-recibo/${idTransferencia}`)
     if (tipo.value === 'terceros' && cuentaTerceroSeleccionada.value === 'manual' && cuentaTerceroManual.value) {
@@ -410,7 +447,12 @@ const realizarTransferencia = async () => {
     cuentasPendientes.value = cuentasPendientes.value.filter(c => c.noCuenta !== destino)
   } catch (error: any) {
     const mensaje = error?.response?.data?.message || 'Ocurrió un error al procesar la transferencia.'
-    showToast('error', 'Error', mensaje)
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al realizar la transferencia',
+      text: mensaje
+    })
+    //showToast('error', 'Error', mensaje)
     console.error(error)
   } finally {
     cargandoTransferencia.value = false

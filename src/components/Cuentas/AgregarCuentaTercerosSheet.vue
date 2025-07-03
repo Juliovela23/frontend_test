@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/sheet'
 import axios from 'axios'
 import CustomToast from '../Generales/CustomToast.vue'
+import Swal from 'sweetalert2'
 
 const form = ref({
     numeroCuenta: '',
@@ -69,9 +70,17 @@ async function verificarCuenta() {
         })
 
     } catch (e) {
+       
         errorMsg.value = e.response?.status === 404
-            ? 'No se encontró la cuenta, revisa el número e inténtalo de nuevo.'
-            : 'Hubo un error inesperado.'
+      ? 'No se encontró la cuenta, revisa el número e inténtalo de nuevo.'
+      : 'Hubo un error inesperado.'
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: errorMsg.value,
+      confirmButtonText: 'Cerrar',
+    })
     } finally {
         loadingVerifica.value = false
     }
@@ -99,6 +108,7 @@ async function solicitarToken() {
         })
 
         showToast('success', '✅ Éxito', response.data.message || 'El código fue enviado a su correo.')
+        
         tokenSolicitado.value = true
     } catch (e) {
         showToast('error', '❌ Error', 'No se pudo enviar el token.')

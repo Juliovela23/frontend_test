@@ -83,7 +83,7 @@
 import { useRoute } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-
+import Swal from 'sweetalert2'
 const route = useRoute()
 const transferenciaId = route.params.id as string
 
@@ -99,7 +99,13 @@ onMounted(async () => {
     })
     transferencia.value = res.data
   } catch (err) {
-    console.error('Error al obtener transferencia:', err)
+    Swal.fire({
+  icon: "error",
+  title: "Ha ocurrido un error.",
+  text: "Error al obtener la transferencia. Por favor, inténtalo de nuevo más tarde."+err,
+  footer: '<a href="#">Why do I have this issue?</a>'
+});
+    //console.error('Error al obtener transferencia:', err)
   }
 })
 </script>
