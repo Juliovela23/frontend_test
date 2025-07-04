@@ -14,6 +14,7 @@ import PagoAutomaticoView from '@/views/Creditos/PagoAutomaticoView.vue'
 import NotificacionesView from '@/views/Dashboard/NotificacionesView.vue'
 import TransferenciaReciboView from '@/views/viewsGenerales/TransferenciaReciboView.vue'
 import HistorialTransferenciasView from '@/views/Transferencias/HistorialTransferenciasView.vue'
+import AdminNoticiasView from '@/views/Noticias/AdminNoticiasView.vue'
 // ...otros imports
 
 const routes = [
@@ -35,7 +36,8 @@ const routes = [
       { path: 'pago-automatico', name: 'DashboardPagoAutomatico', component: PagoAutomaticoView },
       { path: 'notificaciones', name: 'DashboardNotificaciones', component: NotificacionesView },
       { path: 'transferencia-recibo/:id', name: 'TransferenciaRecibo', component: TransferenciaReciboView, props: true },
-      { path: 'historial-transferencias', name: 'DashboardHistorialTransferencias', component: () => import('@/views/Transferencias/HistorialTransferenciasView.vue') }
+      { path: 'historial-transferencias', name: 'DashboardHistorialTransferencias', component: () => import('@/views/Transferencias/HistorialTransferenciasView.vue') },
+      {path: 'admin-noticias', name: 'AdminNoticias', component: AdminNoticiasView },
       // ...más hijos si los necesitas
     ]
   }

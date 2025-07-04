@@ -2,6 +2,7 @@
   <div class="flex-1 p-4 pt-0 space-y-4">
     <!-- Loader -->
     <div v-if="loading">
+      <!-- 🌀 Spinner clásico -->
       <div v-if="loaderType === 'spinner'" class="flex items-center justify-center min-h-[200px] w-full">
         <svg class="animate-spin h-10 w-10 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none"
           viewBox="0 0 24 24">
@@ -10,9 +11,22 @@
         </svg>
         <span class="ml-4 text-lg text-cyan-800">Cargando tarjetas...</span>
       </div>
+
+      <!-- ✅ Skeleton Cards usando shadcn-vue -->
       <div v-else-if="loaderType === 'skeleton'"
         class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 my-8">
-        <div v-for="n in 3" :key="n" class="bg-gray-200 rounded-xl shadow-md h-[180px] w-[300px] animate-pulse"></div>
+        <div v-for="n in 4" :key="n"
+          class="w-[300px] h-[180px] rounded-xl shadow-md p-4 flex flex-col justify-between">
+          <div class="space-y-2">
+            <Skeleton class="h-4 w-[150px]" />
+            <Skeleton class="h-4 w-[100px]" />
+            <Skeleton class="h-4 w-[120px]" />
+          </div>
+          <div class="flex justify-between gap-2 mt-4">
+            <Skeleton class="h-8 w-[100px] rounded" />
+            <Skeleton class="h-8 w-[100px] rounded" />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -27,56 +41,59 @@
         </template>
       </draggable>
 
-      <br>
+      <br />
       <SheetForm @created="fetchCards" />
     </div>
 
+    <!-- Noticias al final -->
     <NoticiasCard class="w-full max-w-screen-lg mx-auto mt-4" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import AccountCard from '../components/cards/AccountCard.vue'
+import axios from 'axios'
+import draggable from 'vuedraggable'
 import SmartCard from '@/components/cards/SmartCard.vue'
 import SheetForm from '../components/cards/SheetForm.vue'
 import NoticiasCard from '../components/NoticiasCard.vue'
-import draggable from 'vuedraggable'
-import axios from 'axios'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/toast'
+
 const { toast } = useToast()
-const loaderType = ref<'spinner' | 'skeleton'>('spinner')
+
+// Loader
+const loaderType = ref<'spinner' | 'skeleton'>('skeleton')
 const loading = ref(false)
 const error = ref('')
 const cards = ref<any[]>([])
 const infoCards = ref<Record<string, any>>({})
 
-// En tu script de la Home
+// 🗂️ Obtener info específica según tipo
 async function obtenerDatosCard(card) {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
   try {
     if (card.tipo === 'cuenta' && card.referenciaId) {
       const { data } = await axios.get(
         `https://interappapi.onrender.com/api/cuentas/buscar-cuenta?numCuenta=${encodeURIComponent(card.referenciaId)}`,
         { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return data;
+      )
+      return data
     }
     if (card.tipo === 'credito' && card.referenciaId) {
       const { data } = await axios.get(
         `https://interappapi.onrender.com/api/creditos/buscar-credito?codigo=${encodeURIComponent(card.referenciaId)}`,
         { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return data;
+      )
+      return data
     }
-    // Tipo acción u otro
-    return null;
+    return null
   } catch (e) {
-    return null;
+    return null
   }
 }
 
-
+// 📥 Fetch general
 async function fetchCards() {
   try {
     loading.value = true
@@ -85,23 +102,22 @@ async function fetchCards() {
     const { data } = await axios.get('https://interappapi.onrender.com/api/shortcuts', {
       headers: { Authorization: `Bearer ${token}` }
     })
-    // Normalizar tipo a minúscula para cada card
+
+    // Normaliza tipo a minúscula
     data.forEach(card => {
-      card.tipo = card.tipo?.toLowerCase() || '';
-    });
+      card.tipo = card.tipo?.toLowerCase() || ''
+    })
+
     const infos = await Promise.all(
       data.map(async (card) => {
         let info = null
-        if (card.tipo === 'cuenta') {
+        if (card.tipo === 'cuenta' || card.tipo === 'credito') {
           info = await obtenerDatosCard(card)
         }
-        if (card.tipo === 'credito') {
-          info = await obtenerDatosCard(card)
-        }
-        // ...otros tipos...
         return { key: card.referenciaId, info }
       })
     )
+
     cards.value = data
     infoCards.value = {}
     for (const { key, info } of infos) {
@@ -116,7 +132,7 @@ async function fetchCards() {
   }
 }
 
-
+// 🔃 Reordenar
 async function actualizarOrden() {
   cards.value.forEach((card, index) => {
     card.orden = index
@@ -124,7 +140,8 @@ async function actualizarOrden() {
 
   try {
     const token = localStorage.getItem('token')
-    await axios.post('https://interappapi.onrender.com/api/shortcuts/reordenar',
+    await axios.post(
+      'https://interappapi.onrender.com/api/shortcuts/reordenar',
       cards.value.map(c => ({ id: c.id, orden: c.orden })),
       { headers: { Authorization: `Bearer ${token}` } }
     )
@@ -145,6 +162,4 @@ async function actualizarOrden() {
 }
 
 onMounted(fetchCards)
-
-const usaCarrusel = computed(() => cards.value.length > 8)
 </script>
