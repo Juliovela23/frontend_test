@@ -2,12 +2,33 @@
   <div class="w-full max-w-5xl mx-auto bg-[#e7eef6] rounded-2xl p-4 md:p-6 mt-8">
     <div class="text-center text-lg font-semibold text-[#15385c] mb-2">Cuentas propias</div>
 
-    <div v-if="loading" class="w-full text-center py-12 text-[#15385c] font-semibold">
-      Cargando cuentas...
+    <!-- Skeleton loader si loading -->
+    <div v-if="loading" class="flex gap-6">
+      <!-- Lista lateral skeleton -->
+      <div class="flex flex-col gap-3 min-w-[220px] max-w-[270px] w-full md:w-[250px]">
+        <div v-for="n in 3" :key="n" class="p-4 rounded-lg bg-white shadow">
+          <Skeleton class="h-5 w-32 mb-2" />
+          <Skeleton class="h-4 w-24" />
+        </div>
+      </div>
+
+      <!-- Detalle skeleton -->
+      <div class="flex-1 max-w-xl p-8 bg-white rounded-xl shadow-xl">
+        <Skeleton class="h-5 w-40 mb-4" />
+        <Skeleton class="h-4 w-32 mb-2" />
+        <Skeleton class="h-5 w-40 mb-4" />
+        <Skeleton class="h-4 w-32 mb-2" />
+        <Skeleton class="h-5 w-40 mb-4" />
+        <Skeleton class="h-4 w-32 mb-2" />
+      </div>
     </div>
+
+    <!-- Error -->
     <div v-else-if="error" class="w-full text-center py-12 text-red-500">
       {{ error }}
     </div>
+
+    <!-- Contenido normal -->
     <div v-else class="flex flex-col md:flex-row gap-6 md:gap-10 items-start justify-center w-full">
       <!-- Lista lateral -->
       <aside class="flex flex-col gap-3 min-w-[220px] max-w-[270px] w-full md:w-[250px]">
@@ -105,6 +126,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import Swal from 'sweetalert2'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useRouter } from 'vue-router'
 
 const cuentas = ref([])
@@ -128,7 +150,6 @@ async function fetchCuentasConUltimaTransferencia() {
     })
 
     cuentas.value = res.data
-    console.log('Cuentas cargadas:', cuentas.value)
   } catch (e) {
     Swal.fire({
       icon: 'error',
@@ -136,6 +157,7 @@ async function fetchCuentasConUltimaTransferencia() {
       text: e.response?.data?.message || 'Ocurrió un error al cargar las cuentas.'
     })
     cuentas.value = []
+    error.value = 'Error al cargar cuentas.'
   } finally {
     loading.value = false
   }
@@ -163,40 +185,17 @@ function handleHistorial() {
   }
 }
 
-// Función para formatear la fecha
 function formatearFecha(fecha) {
   if (!fecha) return ''
   const opciones: Intl.DateTimeFormatOptions = { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  };
-  return new Date(fecha).toLocaleString('es-ES', opciones);
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }
+  return new Date(fecha).toLocaleString('es-ES', opciones)
 }
 
-
-onMounted(() => {
-  fetchCuentasConUltimaTransferencia()
-})
+onMounted(fetchCuentasConUltimaTransferencia)
 </script>
-
-<style scoped>
-.fade-scale-enter-active,
-.fade-scale-leave-active {
-  transition: all 0.3s cubic-bezier(.4, 0, .2, 1);
-}
-
-.fade-scale-enter-from,
-.fade-scale-leave-to {
-  opacity: 0;
-  transform: scale(.96);
-}
-
-.fade-scale-enter-to,
-.fade-scale-leave-from {
-  opacity: 1;
-  transform: scale(1);
-}
-</style>

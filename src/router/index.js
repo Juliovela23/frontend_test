@@ -15,6 +15,7 @@ import NotificacionesView from '@/views/Dashboard/NotificacionesView.vue'
 import TransferenciaReciboView from '@/views/viewsGenerales/TransferenciaReciboView.vue'
 import HistorialTransferenciasView from '@/views/Transferencias/HistorialTransferenciasView.vue'
 import AdminNoticiasView from '@/views/Noticias/AdminNoticiasView.vue'
+import AdminAccesosView from '@/views/Dashboard/AccesosDirectos/AdminAccesosView.vue'
 // ...otros imports
 
 const routes = [
@@ -38,6 +39,7 @@ const routes = [
       { path: 'transferencia-recibo/:id', name: 'TransferenciaRecibo', component: TransferenciaReciboView, props: true },
       { path: 'historial-transferencias', name: 'DashboardHistorialTransferencias', component: () => import('@/views/Transferencias/HistorialTransferenciasView.vue') },
       {path: 'admin-noticias', name: 'AdminNoticias', component: AdminNoticiasView },
+      {path: 'admin-accesos', name: 'AdminAccesos', component: AdminAccesosView },
       // ...más hijos si los necesitas
     ]
   }

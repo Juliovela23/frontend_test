@@ -10,7 +10,6 @@
       <Input v-model="filtroBusqueda" placeholder="Buscar por número, descripción, cuenta, fecha o monto"
         class="w-full md:max-w-sm" />
 
-
       <!-- Selector de cuentas -->
       <select v-model="cuentaSeleccionada"
         class="p-2 rounded-xl border border-[#b6d6ff] text-sm text-[#15385c] bg-white focus:ring-2 focus:ring-[#01a7e4]">
@@ -27,17 +26,23 @@
       </Button>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="text-center py-10 text-[#15385c] font-semibold">
-      <span class="animate-pulse">Cargando transferencias...</span>
+    <!-- Loading skeleton -->
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div v-for="n in 6" :key="n" class="border border-[#d1e4f8] rounded-xl shadow-sm p-4">
+        <Skeleton class="h-4 w-32 mb-2" />
+        <Skeleton class="h-4 w-48 mb-2" />
+        <Skeleton class="h-4 w-24 mb-4" />
+        <Skeleton class="h-8 w-full rounded-md" />
+      </div>
     </div>
 
     <!-- Sin resultados -->
-    <div v-else-if="transferenciasFiltradas.length === 0" class="text-center py-10 text-[#15385c] font-semibold">
+    <div v-else-if="transferenciasFiltradas.length === 0"
+      class="text-center py-10 text-[#15385c] font-semibold">
       No se encontraron transferencias.
     </div>
 
-    <!-- Tarjetas de transferencias en grid -->
+    <!-- Tarjetas de transferencias -->
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div v-for="t in transferenciasPaginadas" :key="t.noTransferencia"
         class="rounded-xl border border-[#d1e4f8] shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-all">
@@ -65,16 +70,13 @@
       </div>
     </div>
 
-    <!-- Controles de paginación -->
+    <!-- Paginación -->
     <div v-if="totalPaginas > 1" class="flex justify-center items-center gap-4 mt-6 text-[#15385c] font-semibold">
-
       <button @click="paginaActual--" :disabled="paginaActual === 1"
         class="px-4 py-2 rounded border bg-white shadow hover:bg-[#e7eef6] disabled:opacity-40">
         ← Anterior
       </button>
-
       <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
-
       <button @click="paginaActual++" :disabled="paginaActual === totalPaginas"
         class="px-4 py-2 rounded border bg-white shadow hover:bg-[#e7eef6] disabled:opacity-40">
         Siguiente →
@@ -83,13 +85,12 @@
   </div>
 </template>
 
-
-
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useRouter } from 'vue-router'
 
 const transferencias = ref([])
@@ -99,7 +100,6 @@ const cuentas = ref([])
 const cuentaSeleccionada = ref('')
 const router = useRouter()
 
-// Paginación
 const paginaActual = ref(1)
 const transferenciasPorPagina = 9
 
@@ -112,10 +112,8 @@ const transferenciasPaginadas = computed(() => {
   return transferenciasFiltradas.value.slice(inicio, inicio + transferenciasPorPagina)
 })
 
-// Filtro en memoria
 const transferenciasFiltradas = computed(() => {
   const texto = filtroBusqueda.value.trim().toLowerCase()
-
   if (!texto) return transferencias.value
 
   return transferencias.value.filter(t => {
@@ -135,8 +133,6 @@ const transferenciasFiltradas = computed(() => {
   })
 })
 
-
-// Buscar + reset página
 const buscarTransferencias = () => {
   paginaActual.value = 1
   cargarTransferencias()
@@ -146,16 +142,12 @@ const cargarTransferencias = async () => {
   loading.value = true
   try {
     const params = {}
-    if (cuentaSeleccionada.value) {
-      params.cuentaId = cuentaSeleccionada.value
-    }
+    if (cuentaSeleccionada.value) params.cuentaId = cuentaSeleccionada.value
 
     const response = await axios.get(
       'https://interappapi.onrender.com/api/transferencias/mis-transferencias',
       {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         params
       }
     )
@@ -171,9 +163,7 @@ const cargarTransferencias = async () => {
 onMounted(async () => {
   try {
     const res = await axios.get('https://interappapi.onrender.com/api/cuentas/mis-cuentas', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
     cuentas.value = res.data
   } catch (err) {
@@ -194,6 +184,3 @@ const verRecibo = (id) => {
   router.push(`/dashboard/transferencia-recibo/${id}`)
 }
 </script>
-
-
-<style scoped></style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,19 +15,19 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet'
 import ComboboxDoble from '../cards/ComboboxDoble.vue'
-
+import Swal from 'sweetalert2'
+// === FORM STATE ===
 const form = ref({
-    tipo: 'cuenta', // obligatoria
+    tipo: 'cuenta',
     referenciaId: '',
     accion: '',
     orden: 0,
     tituloPersonalizado: '',
     icono: '',
     colorFondo: '#0055ff',
-    activo: true, // por defecto true
+    activo: true,
 })
 
-// Recibe como prop una función para refrescar las cards después de crear una nueva
 const props = defineProps({
     onCardCreated: {
         type: Function,
@@ -37,32 +37,82 @@ const props = defineProps({
 
 const loading = ref(false)
 
+// === CAMPOS CONDICIONALES ===
+const esCuentaOCredito = computed(() =>
+    form.value.tipo === 'cuenta' || form.value.tipo === 'credito'
+)
+const esAccion = computed(() =>
+    form.value.tipo === 'accion'
+)
+
+// Opciones de acciones predeterminadas
+const accionesDisponibles = [
+    { value: 'cuentas', label: 'Cuentas', icon: 'wallet' },
+    { value: 'transferencias', label: 'Transferencias', icon: 'transfer' },
+    { value: 'historial-transferencias', label: 'Historial de transferencias', icon: 'history' },
+    { value: 'creditos', label: 'Créditos', icon: 'credit-card' },
+    { value: 'servicios', label: 'Servicios', icon: 'bolt' },
+    { value: 'estados-cuenta', label: 'Estados de cuenta', icon: 'file-invoice' },
+    //{ value: 'reportes', label: 'Reportes', icon: 'chart-bar' },
+    { value: 'notificaciones', label: 'Notificaciones', icon: 'bell' },
+    //{ value: 'ajustes', label: 'Ajustes', icon: 'cog' },
+    //{ value: 'programadas', label: 'Programadas', icon: 'calendar' },
+]
+
+// === FUNCION GUARDAR ===
 async function guardarTarjeta() {
-    // Validación rápida
     if (!form.value.tipo || !form.value.tituloPersonalizado) {
         alert('El campo "Tipo" y "Título personalizado" son obligatorios')
         return
     }
+
     try {
         loading.value = true
         const token = localStorage.getItem('token')
-        // Crea el DTO (puedes limpiar aquí lo que envías)
+
+        // 🔑 Lógica específica por tipo
+        if (esCuentaOCredito.value) {
+            form.value.accion = null
+            form.value.icono = form.value.tipo === 'cuenta' ? 'wallet' : 'credit-card'
+        }
+        if (esAccion.value) {
+            const accionSeleccionada = accionesDisponibles.find(a => a.value === form.value.accion)
+            form.value.referenciaId = 'accion_general'
+            form.value.icono = accionSeleccionada?.icon || 'bolt'
+        }
+
+        // 🔢 Obtener el orden automáticamente del backend
+        const countResp = await axios.get(
+            'https://interappapi.onrender.com/api/shortcuts/count',
+            { headers: { Authorization: `Bearer ${token}` } }
+        )
+        form.value.orden = countResp.data + 1
+
         const dataToSend = {
             tipo: form.value.tipo,
-            referenciaId: form.value.referenciaId || null,
-            accion: form.value.accion || null,
-            orden: Number(form.value.orden) || 0,
+            referenciaId: form.value.referenciaId,
+            accion: form.value.accion,
+            orden: form.value.orden,
             tituloPersonalizado: form.value.tituloPersonalizado,
-            icono: form.value.icono || null,
+            icono: form.value.icono,
             colorFondo: form.value.colorFondo,
             activo: form.value.activo
         }
+
         await axios.post(
             'https://interappapi.onrender.com/api/shortcuts',
             dataToSend,
             { headers: { Authorization: `Bearer ${token}` } }
         )
-        // Limpia el form
+        Swal.fire({
+            icon: 'success',
+            title: 'Tarjeta creada',
+            text: 'La tarjeta se ha creado exitosamente.'
+        }).then(() => {
+            window.location.reload()
+        })
+
+        // Limpiar
         form.value = {
             tipo: 'cuenta',
             referenciaId: '',
@@ -71,26 +121,34 @@ async function guardarTarjeta() {
             tituloPersonalizado: '',
             icono: '',
             colorFondo: '#0055ff',
-            activo: true
+            activo: true,
         }
-        // Refresca las cards en el padre si existe la función
+
         if (props.onCardCreated) props.onCardCreated()
+
     } catch (e) {
-        alert('Ocurrió un error al crear la tarjeta')
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al crear tarjeta',
+            text: e.response?.data?.message || 'Ocurrió un error al crear la tarjeta.'
+        })
+        //alert('Ocurrió un error al crear la tarjeta')
     } finally {
         loading.value = false
     }
 }
 </script>
 
+
 <template>
     <Sheet>
         <SheetTrigger as-child>
             <div class="w-[280px] min-h-[180px] rounded-xl border-2 border-dashed border-cyan-400 flex items-center justify-center cursor-pointer
-      hover:-translate-y-2 hover:shadow-cyan-400/30 hover:bg-cyan-50/20 transition-all duration-300 shadow-md">
+        hover:-translate-y-2 hover:shadow-cyan-400/30 hover:bg-cyan-50/20 transition-all duration-300 shadow-md">
                 <span class="text-5xl font-bold text-cyan-400">+</span>
             </div>
         </SheetTrigger>
+
         <SheetContent>
             <SheetHeader>
                 <SheetTitle>Agregar Tarjeta</SheetTitle>
@@ -100,43 +158,52 @@ async function guardarTarjeta() {
             </SheetHeader>
 
             <div class="grid gap-4 py-4">
+
+                <!-- Selector de TIPO SIEMPRE visible -->
                 <div>
-                    <Label hidden for="tipo">Tipo *</Label>
-                    <Input type="hidden" id="tipo" v-model="form.tipo" placeholder="cuenta / credito / accion" />
+                    <Label for="tipo">Tipo *</Label>
+                    <select id="tipo" v-model="form.tipo" class="w-full p-2 border rounded">
+                        <option disabled value="">Selecciona un tipo</option>
+                        <option value="cuenta">Cuenta</option>
+                        <option value="credito">Crédito</option>
+                        <option value="accion">Opción general</option>
+                    </select>
                 </div>
-                <!-- Aquí tu combobox doble si lo necesitas -->
-                <ComboboxDoble v-model="form" />
+
+                <!-- ComboboxDoble solo para cuenta/credito -->
+                <ComboboxDoble v-if="esCuentaOCredito" v-model="form.referenciaId" :tipo="form.tipo" />
+
+                <!-- Acción solo para tipo 'accion' -->
+                <div v-if="esAccion">
+                    <Label for="accion">Acción</Label>
+                    <select id="accion" v-model="form.accion" class="w-full p-2 border rounded">
+                        <option disabled value="">Selecciona una acción</option>
+                        <option v-for="accion in accionesDisponibles" :key="accion.value" :value="accion.value">
+                            {{ accion.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Título siempre -->
                 <div>
                     <Label for="titulo">Título personalizado *</Label>
                     <Input id="titulo" v-model="form.tituloPersonalizado" placeholder="Mi cuenta ahorro..." />
                 </div>
-                <div>
-                    <Label for="referencia">Referencia ID</Label>
-                    <Input id="referencia" v-model="form.referenciaId" placeholder="CUENTA_008" />
-                </div>
-                <div>
-                    <Label for="accion">Acción (opcional)</Label>
-                    <Input id="accion" v-model="form.accion" placeholder="ver-saldo / pagar..." />
-                </div>
-                <div>
-                    <Label for="icono">Ícono</Label>
-                    <Input id="icono" v-model="form.icono" placeholder="wallet / credit-card / bolt..." />
-                </div>
+
+                <!-- Color fondo -->
                 <div>
                     <Label for="color">Color de fondo</Label>
                     <Input id="color" type="color" v-model="form.colorFondo" class="h-10 w-20 p-0 cursor-pointer" />
                 </div>
-                <div>
-                    <Label for="orden">Orden</Label>
-                    <Input id="orden" type="number" v-model="form.orden" min="0" />
-                </div>
+
+                <!-- Activo -->
                 <div>
                     <label class="inline-flex items-center gap-2">
                         <input type="checkbox" v-model="form.activo" />
                         <span class="text-sm">Activo</span>
                     </label>
                 </div>
-                
+
             </div>
 
             <SheetFooter>

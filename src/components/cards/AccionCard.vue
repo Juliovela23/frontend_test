@@ -88,8 +88,8 @@ const iconClass = computed(() => {
 
 function accionRapida() {
     // Si es navegación interna
-    if (props.card?.referenciaId) {
-        window.location.href = props.card.referenciaId
+    if (props.card?.accion) {
+        window.location.href = '/dashboard/'+ props.card.accion
     } else {
         alert(`Acción rápida: ${props.card?.accion ?? ''}`)
     }

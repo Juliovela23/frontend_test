@@ -15,8 +15,7 @@
       <!-- ✅ Skeleton Cards usando shadcn-vue -->
       <div v-else-if="loaderType === 'skeleton'"
         class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 my-8">
-        <div v-for="n in 4" :key="n"
-          class="w-[300px] h-[180px] rounded-xl shadow-md p-4 flex flex-col justify-between">
+        <div  v-for="n in 4" :key="n" class="w-[300px] h-[180px] rounded-xl shadow-md p-4 flex flex-col justify-between">
           <div class="space-y-2">
             <Skeleton class="h-4 w-[150px]" />
             <Skeleton class="h-4 w-[100px]" />
@@ -35,7 +34,7 @@
       <draggable v-model="cards" item-key="id" handle=".drag-handle" animation="250" ghost-class="opacity-40"
         class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4" @end="actualizarOrden">
         <template #item="{ element }">
-          <div class="drag-handle cursor-move">
+          <div  v-if="element.activo" class="drag-handle cursor-move">
             <SmartCard :card="element" :info="infoCards[element.referenciaId]" :colorFondo="element.colorFondo" />
           </div>
         </template>
@@ -43,7 +42,19 @@
 
       <br />
       <SheetForm @created="fetchCards" />
+      <div class="flex justify-end mt-4">
+        <button @click="router.push('/dashboard/admin-accesos')" role="button" aria-label="Administrar accesos directos"
+          class="inline-flex items-center gap-2 px-4 py-2 border border-[#15385c] text-[#15385c] rounded-full transition hover:bg-[#15385c] hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Administrar accesos directos
+        </button>
+      </div>
+
+
     </div>
+
 
     <!-- Noticias al final -->
     <NoticiasCard class="w-full max-w-screen-lg mx-auto mt-4" />
@@ -59,6 +70,12 @@ import SheetForm from '../components/cards/SheetForm.vue'
 import NoticiasCard from '../components/NoticiasCard.vue'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/toast'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+function irAdminAccesos() {
+  router.push({ name: 'AdminAccesos' })
+}
 
 const { toast } = useToast()
 

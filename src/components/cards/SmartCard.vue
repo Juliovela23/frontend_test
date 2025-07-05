@@ -20,6 +20,7 @@
   <div v-else class="w-[300px] h-[180px] flex items-center justify-center bg-gray-200 rounded-xl text-gray-500">
     Tarjeta no soportada
   </div>
+  
 </template>
 
 <script setup>
